@@ -1,0 +1,41 @@
+project(npuemul C CXX ASM_MASM)
+cmake_minimum_required(VERSION 3.21)
+
+include(ExternalProject)
+
+set(ASM_SRC src/MatmulMicrokernel.obj src/mtrx_mul.obj)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-O3 -g -march=native)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(/arch:AVX2)
+endif()
+
+include_directories(include internal)
+add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/Threads.cpp)
+
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+
+ExternalProject_Add(googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_ENABLE_GTEST_TESTS=OFF -DBENCHMARK_ENABLE_TESTING=OFF -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+)
+
+ExternalProject_Add(googletest
+    GIT_REPOSITORY https://github.com/google/googletest
+    CMAKE_ARGS -DBUILD_GMOCK=OFF -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+)
+
+include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
+add_executable(tests tests/TestsMain.cpp tests/MatmulTests.cpp tests/Conv2DTests.cpp)
+add_dependencies(tests googletest)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_libraries(tests npuemul gtest_main gtest)
+else()
+    target_link_libraries(tests npuemul gtest_maind gtestd)
+endif()
+
+add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp)
+add_dependencies(benchmarks googlebenchmark)
+target_link_libraries(benchmarks npuemul benchmark_main benchmark shlwapi)
