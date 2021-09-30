@@ -3,10 +3,9 @@
 
 #include <Conv2D.h>
 #include <Threads.h>
-/*
-extern void ConvertGroupToMatrix(const uint8_t *tensor, int height, int width, int channels, int channels_per_group,
-    int filter_height, int filter_width, int dilation_y, int dilation_x, int stride_y, int stride_x,
-    int pad_top, int pad_left, uint8_t *matrix, int res_height, int res_width);
+
+extern void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npuemulator::Padding pad, npuemulator::Stride stride,
+    uint8_t *matrix, int filter_height, int filter_width, int res_height, int res_width);
 
 template <typename T>
 void PutValues(T *arr, int size)
@@ -16,18 +15,18 @@ void PutValues(T *arr, int size)
     }
 }
 
-void TestGroupToMatrix(int srcC, int srcH, int srcW,
+void TestTensorToMatrix(int srcC, int srcH, int srcW,
     int kernelY, int kernelX, int dilationY, int dilationX, int strideY, int strideX,
     int padY, int padX, int padH, int padW)
 {
     auto tensor = new uint8_t[srcH * srcW * srcC];
     PutValues(tensor, srcH * srcW * srcC);
+    npuemulator::Tensor src(tensor, srcH, srcW, srcC);
     int dstH = (srcH + padY + padH - (dilationY * (kernelY - 1) + 1)) / strideY + 1;
     int dstW = (srcW + padX + padW - (dilationX * (kernelX - 1) + 1)) / strideX + 1;
     auto matrix = new uint8_t[dstH * dstW * srcC * kernelY * kernelX];
-    auto ptr_matrix = matrix;
-    ConvertGroupToMatrix(tensor, srcH, srcW, srcC, srcC, kernelY, kernelX, dilationY, dilationX,
-        strideY, strideX, padY, padX, matrix, dstH, dstW);
+    auto ptr_mat = matrix;
+    TensorToMatrix(src, {dilationY, dilationY}, {padY, padH, padX, padW}, {strideY, strideX}, matrix, kernelY, kernelX, dstH, dstW);
     for (int dy = 0; dy < dstH; ++dy)
     {
         for (int dx = 0; dx < dstW; ++dx)
@@ -41,15 +40,15 @@ void TestGroupToMatrix(int srcC, int srcH, int srcW,
                     for (int sc = 0; sc < srcC; ++sc)
                     {
                         if (sy >= 0 && sy < srcH && sx >= 0 && sx < srcW)
-                            *matrix++ = tensor[(sy * srcW + sx) * srcC + sc];
+                            ASSERT_EQ(*ptr_mat++, tensor[(sy * srcW + sx) * srcC + sc]);
                         else
-                            *matrix++ = 0;
+                            ASSERT_EQ(*ptr_mat++, 0);
                     }
                 }
             }
         }
     }
-    delete[] ptr_matrix;
+    delete[] matrix;
     delete[] tensor;
 }
 
@@ -65,8 +64,6 @@ void TestConv2D(int height, int width, int channels, int groups, int filter_heig
     auto res = new uint8_t[res_width * res_height * filter_channels / groups];
     auto tensor_matrix = new uint8_t[res_height * res_width * filter_height * filter_width * channels / groups];
     auto filter_reordered_mat = new uint8_t[NPUEMUL_THREADS.Count() * filter_height * filter_width * channels / groups * filter_channels / groups];
-    npuemulator::Conv2D(tensor, height, width, channels, groups, filter, filter_height, filter_width, filter_channels,
-        dilation_y, dilation_x, stride_y, stride_x, pad_top, pad_left, pad_bot, pad_right, res, tensor_matrix, filter_reordered_mat);
     channels /= groups;
     filter_channels /= groups;
     for (int g = 0; g < groups; ++g) {
@@ -100,16 +97,16 @@ void TestConv2D(int height, int width, int channels, int groups, int filter_heig
     delete[] filter_reordered_mat;
 }
 
-TEST(CONV2D_UTILS, GroupToMatrixPointwise_128x128x128)
+TEST(CONV2D_UTILS, TensorToMatrixPointwise_128x128x128)
 {
     constexpr int SIZE = 128;
-    TestGroupToMatrix(SIZE, SIZE, SIZE, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0);
+    TestTensorToMatrix(SIZE, SIZE, SIZE, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0);
 }
 
-TEST(CONV2D_UTILS, GroupToMatrix_Kernel3x3_Tensor128x128x128)
+TEST(CONV2D_UTILS, TensorToMatrix_Kernel3x3_Tensor128x128x128)
 {
     constexpr int SIZE = 128;
-    TestGroupToMatrix(SIZE, SIZE, SIZE, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    TestTensorToMatrix(SIZE, SIZE, SIZE, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 }
 
 TEST(CONV2D, Conv2D_Kernel1x1_Tensor128x128x128)
@@ -123,4 +120,3 @@ TEST(CONV2D, Conv2D_Kernel3x3_Tensor128x128x128)
     constexpr int SIZE = 128;
     TestConv2D(SIZE, SIZE, SIZE, 1, 3, 3, 128, 1, 1, 1, 1, 1, 1, 1, 1);
 }
-*/

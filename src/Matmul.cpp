@@ -20,12 +20,12 @@ inline void ReorderMat2VectorsOf32(const uint8_t *src1, const uint8_t *src2, uin
     _mm256_storeu_si256(reinterpret_cast<__m256i *>(dst2), res2);
 }
 
-inline void ReorderMat2ColumnOf32(const uint8_t *mat2, int height, uint8_t *&reordered_mat2, int width_offset)
+inline void ReorderMat2ColumnOf32(const uint8_t *mat2, int height, int width, uint8_t *&reordered_mat2)
 {
     uint8_t zero_arr[32];
     memset(zero_arr, 0, 32);
-    for (; height >= 2; height -= 2, mat2 += 2 * width_offset) {
-        ReorderMat2VectorsOf32(mat2, mat2 + width_offset, reordered_mat2, reordered_mat2 + 32);
+    for (; height >= 2; height -= 2, mat2 += 2 * width) {
+        ReorderMat2VectorsOf32(mat2, mat2 + width, reordered_mat2, reordered_mat2 + 32);
         reordered_mat2 += 64;
     }
     if (height) {
@@ -34,13 +34,13 @@ inline void ReorderMat2ColumnOf32(const uint8_t *mat2, int height, uint8_t *&reo
     }
 }
 
-inline void ReorderMat2ColumnLess32(const uint8_t *mat2, int height, uint8_t *reordered_mat2, int length, int width_offset)
+inline void ReorderMat2ColumnLess32(const uint8_t *mat2, int height, int width, uint8_t *reordered_mat2, int length)
 {
     uint8_t vectors_arr[96];
     memset(vectors_arr, 0, 96);
-    for (; height >= 2; height -= 2, mat2 += 2 * width_offset) {
+    for (; height >= 2; height -= 2, mat2 += 2 * width) {
         memcpy(vectors_arr, mat2, length);
-        memcpy(vectors_arr + 32, mat2 + width_offset, length);
+        memcpy(vectors_arr + 32, mat2 + width, length);
         ReorderMat2VectorsOf32(vectors_arr, vectors_arr + 32, reordered_mat2, reordered_mat2 + 32);
         reordered_mat2 += 64;
     }
@@ -53,11 +53,12 @@ inline void ReorderMat2ColumnLess32(const uint8_t *mat2, int height, uint8_t *re
 
 void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2)
 {
-    for (; mat2.width >= 32; mat2.width -= 32, mat2.data += 32) {
-        ReorderMat2ColumnOf32(mat2.data, mat2.height, reordered_mat2.data, mat2.offset);
+    auto i = mat2.width;
+    for (; i >= 32; i -= 32, mat2.data += 32) {
+        ReorderMat2ColumnOf32(mat2.data, mat2.height, mat2.width, reordered_mat2.data);
     }
-    if (mat2.width) {
-        ReorderMat2ColumnLess32(mat2.data, mat2.height, reordered_mat2.data, mat2.width, mat2.offset);
+    if (i) {
+        ReorderMat2ColumnLess32(mat2.data, mat2.height, mat2.width, reordered_mat2.data, i);
     }
 }
 
@@ -111,42 +112,42 @@ void dMicrokernel(const uint8_t *mat1, int mat1_width, const uint8_t *mat2, int 
 */
 
 extern "C" void Microkernel(const uint8_t *mat1, int mat1_width, const uint8_t *reordered_mat2,
-    uint8_t *res, int kernel_height, int kernel_width, int mat1_offset, int res_offset);
+    uint8_t *res, int res_width, int kernel_height, int kernel_width);
 
 inline void ComputeColumn(const uint8_t *mat1, int mat1_height, int mat1_width, const uint8_t *reordered_mat2,
-    uint8_t *res, int kernel_width, int mat1_offset, int res_offset)
+    uint8_t *res, int res_width, int kernel_width)
 {
     for (; mat1_height >= 4; mat1_height -=4) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, 4, kernel_width, mat1_offset, res_offset);
-        mat1 += 4 * mat1_offset;
-        res += 4 * res_offset;
+        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, 4, kernel_width);
+        mat1 += 4 * mat1_width;
+        res += 4 * res_width;
     }
     if (mat1_height) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, mat1_height, kernel_width, mat1_offset, res_offset);
+        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, mat1_height, kernel_width);
     }
 }
 
 void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer)
 {
-    if (mat1.width != mat2.height) {
-        std::cerr << "npuemulator: mat1.width != mat2.height" << std::endl;
+    if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != mat1.height) {
+        std::cerr << "npuemulator: Matmul: wrong sides!" << std::endl;
         exit(1);
     }
     int mat2_height_multiply2 = (mat2.height + 1) & -2;
     int mat2_width_multiply32 = (mat2.width + 31) & -32;
     if (mat2_buffer.height < mat2_height_multiply2 || mat2_buffer.width < mat2_width_multiply32) {
-        std::cerr << "npuemulator: Not enough space for mat2_buffer!" << std::endl;
+        std::cerr << "npuemulator: Matmul: Not enough space for mat2_buffer!" << std::endl;
         exit(1);
     }
     ReorderMat2(mat2, mat2_buffer);
     auto i = mat2.width;
     for (; mat2.width >= 32; mat2.width -= 32) {
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, 32, mat1.offset, res.offset);
+        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, 32);
         mat2_buffer.data += 32 * mat2_height_multiply2;
         res.data += 32;
     }
     if (mat2.width) {
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, mat2.width, mat1.offset, res.offset);
+        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, mat2.width);
     }
 }
 
@@ -174,11 +175,11 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
         return;
     }
     int mat2_buffer_height = mat2_buffer.height / n_threads;
-    int mat2_buffer_offset = mat2_buffer_height * mat2_buffer.offset;
+    int mat2_buffer_offset = mat2_buffer_height * mat2_buffer.width;
     int mat1_height = mat1.height;
     mat1.height /= n_threads;
-    int mat1_offset = mat1.height * mat1.offset;
-    int res_offset = mat1.height * mat2.offset;
+    int mat1_offset = mat1.height * mat1.width;
+    int res_offset = mat1.height * mat2.width;
     constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix);
     uint8_t (*args)[ARGS_SIZE] = new uint8_t[n_threads - 1][ARGS_SIZE];
     int i = 0;

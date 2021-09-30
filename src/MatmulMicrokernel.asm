@@ -88,10 +88,10 @@ Microkernel:
     xor rdx,    rdx
     xor r10d,   r10d
     xor r11d,   r11d
-    mov r12d,   dword ptr [rbp + 48]
+    mov r12d,   dword ptr [rbp + 56]
     cmp r12d,   1
     je  loop_head
-    mov edx,    dword ptr [rbp + 64]
+    mov edx,    eax
     cmp r12d,   2
     je  loop_head
     lea r10d,   [2 * edx]
@@ -153,8 +153,8 @@ loop_head:
     vpaddw  ymm7,   ymm7,   ymm13
 ; END LOOP
 store_results:
-    mov r11d,   dword ptr [rbp + 56]
-    mov r10d,   dword ptr [rbp + 72]
+    mov r10d,   dword ptr [rbp + 48]
+    mov r11d,   dword ptr [rbp + 64]
     sub rsp,    32 * 6
     mov r8, rsp
     vmovdqu ymmword ptr [rsp],  ymm2

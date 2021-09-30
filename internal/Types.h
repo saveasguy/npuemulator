@@ -10,22 +10,20 @@ struct Matrix
     uint8_t *data;
     int height;
     int width;
-    int offset;
 
 public:
-    Matrix(uint8_t *data_, int height_, int width_, int offset_ = 0);
+    Matrix(uint8_t *data_, int height_, int width_);
 };
 
 struct Tensor
 {
     uint8_t *data;
-    int groups;
     int height;
     int width;
     int channels;
 
 public:
-    Tensor(uint8_t *data_, int height_, int width_, int n_channels, int n_groups = 1);
+    Tensor(uint8_t *data_, int height_, int width_, int n_channels);
 };
 
 struct Dilation

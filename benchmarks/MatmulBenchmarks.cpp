@@ -2,6 +2,7 @@
 
 #include <Matmul.h>
 #include <Threads.h>
+#include <Types.h>
 
 extern void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2);
 
