@@ -42,8 +42,10 @@ void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npu
     }
 }
 
-void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_mat)
+void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_buffer)
 {
     TensorToMatrix(src, dilation, pad, stride, src_mat.data, filter.height, filter.width, res.height, res.width);
-    //npuemulator::Matmul()
+    Matrix res_mat(res.data, res.height * res.width, res.channels);
+    Matrix filter_mat(filter.data, filter.height * filter.width * filter.batches, filter.channels);
+    Matmul(src_mat, filter_mat, res_mat, filter_buffer);
 }

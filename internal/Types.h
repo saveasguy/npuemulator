@@ -18,12 +18,13 @@ public:
 struct Tensor
 {
     uint8_t *data;
+    int batches;
     int height;
     int width;
     int channels;
 
 public:
-    Tensor(uint8_t *data_, int height_, int width_, int n_channels);
+    Tensor(uint8_t *data_, int height_, int width_, int n_channels, int n_batches = 1);
 };
 
 struct Dilation
