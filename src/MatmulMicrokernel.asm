@@ -4,7 +4,6 @@ shuffle_mask byte 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14
 
 .code
 public Microkernel
-public store_results
 
 StoreRow:
     mov eax,    0FF00h

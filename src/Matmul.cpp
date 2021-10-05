@@ -117,7 +117,7 @@ extern "C" void Microkernel(const uint8_t *mat1, int mat1_width, const uint8_t *
 inline void ComputeColumn(const uint8_t *mat1, int mat1_height, int mat1_width, const uint8_t *reordered_mat2,
     uint8_t *res, int res_width, int kernel_width)
 {
-    for (; mat1_height >= 4; mat1_height -=4) {
+    for (; mat1_height >= 4; mat1_height -= 4) {
         Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, 4, kernel_width);
         mat1 += 4 * mat1_width;
         res += 4 * res_width;

@@ -15,7 +15,7 @@ template <typename T>
 void PutValues(T *arr, int size)
 {
     for (int i = 0; i < size; ++i) {
-        arr[i] = i % 43 + 1;
+        arr[i] = i % 256 + 1;
     }
 }
 

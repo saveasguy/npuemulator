@@ -49,3 +49,12 @@ void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding p
     Matrix filter_mat(filter.data, filter.height * filter.width * filter.batches, filter.channels);
     Matmul(src_mat, filter_mat, res_mat, filter_buffer);
 }
+
+void npuemulator::ParallelConv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_buffer)
+{
+    int n_threads = NPUEMUL_THREADS.Count();
+    int i = 0;
+    for (; i < n_threads - 1; ++i) {
+
+    }
+}

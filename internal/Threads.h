@@ -38,9 +38,9 @@ public:
 
 	void WaitThreads();
 
-	size_t Count()
+	int Count()
 	{
-		return _additional_threads.size() + 1;
+		return static_cast<int>(_additional_threads.size() + 1);
 	}
 
 private:

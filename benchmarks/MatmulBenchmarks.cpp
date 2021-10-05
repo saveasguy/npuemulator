@@ -25,9 +25,9 @@ extern "C" void mtrx_mul_f(const float *m1, int h1, int w1, const float *m2, int
 
 static void BM_Matmulf(benchmark::State &state)
 {
-    constexpr size_t SIZE1 = 56 * 56;
-    constexpr size_t SIZE2 = 256 * 9;
-    constexpr size_t SIZE3 = 256;
+    constexpr size_t SIZE1 = 128 * 128;
+    constexpr size_t SIZE2 = 128;
+    constexpr size_t SIZE3 = 128;
     float *a = new float[SIZE1 * SIZE2];
     float *b = new float[SIZE2 * SIZE3];
     float *c = new float[SIZE1 * SIZE3];
@@ -44,9 +44,9 @@ static void BM_Matmulf(benchmark::State &state)
 
 static void BM_Matmul(benchmark::State &state)
 {
-    constexpr size_t SIZE1 = 512;
-    constexpr size_t SIZE2 = 512;
-    constexpr size_t SIZE3 = 512;
+    constexpr size_t SIZE1 = 1024;
+    constexpr size_t SIZE2 = 1024;
+    constexpr size_t SIZE3 = 1024;
     uint8_t *a = new uint8_t[SIZE1 * SIZE2];
     npuemulator::Matrix m1(a, SIZE1, SIZE2);
     uint8_t *b = new uint8_t[SIZE2 * SIZE3];
