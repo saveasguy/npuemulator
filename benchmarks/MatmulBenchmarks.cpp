@@ -55,7 +55,7 @@ static void BM_Matmul(benchmark::State &state)
     npuemulator::Matrix m3(c, SIZE1, SIZE3);
     constexpr size_t SIZE2_MULTIPLY2 = (SIZE2 + 1) & -2;
     constexpr size_t SIZE3_MULTIPLY32 = (SIZE2 + 31) & -32;
-    uint8_t *d = new uint8_t[NPUEMUL_THREADS.Count() * SIZE2_MULTIPLY2 * SIZE3_MULTIPLY32];
+    uint8_t *d = new uint8_t[2 * NPUEMUL_THREADS.Count() * SIZE2_MULTIPLY2 * SIZE3_MULTIPLY32];
     npuemulator::Matrix m4(d, NPUEMUL_THREADS.Count() * SIZE2_MULTIPLY2, SIZE3_MULTIPLY32);
     for (auto _ : state) {
         npuemulator::ParallelMatmul(m1, m2, m3, m4);
