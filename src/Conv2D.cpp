@@ -4,7 +4,7 @@
 #include "Threads.h"
 
 void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npuemulator::Padding pad, npuemulator::Stride stride,
-    uint8_t *matrix, int filter_height, int filter_width, int res_height, int res_width)
+    int8_t *matrix, int filter_height, int filter_width, int res_height, int res_width)
 {
     int dilation_y_add_offset = dilation.y * src.width * src.channels;
     int dilation_x_add_offset = dilation.x * src.channels;

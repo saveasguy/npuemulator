@@ -7,7 +7,7 @@
 #include <Conv2D.h>
 #include <Threads.h>
 #include <Types.h>
-
+/*
 static void BM_Conv2D(benchmark::State &state)
 {
     constexpr int SIZE = 128, CHANNELS = 128, FILTER_SIZE = 1, FILTER_CHANNELS = 128;
@@ -34,3 +34,4 @@ static void BM_Conv2D(benchmark::State &state)
     delete[] filter_buffer;
 }
 //BENCHMARK(BM_Conv2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
+*/

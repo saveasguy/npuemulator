@@ -1,7 +1,9 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3'
 import tensorflow as tf
+import numpy as np
+
 res = []
 with open("tests/test_file.txt") as f:
     lines = f.readlines()
@@ -14,7 +16,7 @@ with open("tests/test_file.txt") as f:
     tensor = tf.reshape(tensor, [1, h, w, c])
     filter = tf.reshape(filter, [fh, fw, c, fc])
     res = tf.nn.conv2d(tensor, filter, [1, sy, sx, 1], [[0, 0], [pt, pb], [pl, pr], [0, 0]])
-    res = [x % 256 for x in res.numpy()]
+    res = [np.int8(x) for x in res.numpy()]
 
 with open("tests/test_file.txt", "w") as f:
     for batch in res:

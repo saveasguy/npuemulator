@@ -9,13 +9,13 @@
 #include <Threads.h>
 
 extern void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npuemulator::Padding pad, npuemulator::Stride stride,
-    uint8_t *matrix, int filter_height, int filter_width, int res_height, int res_width);
+    int8_t *matrix, int filter_height, int filter_width, int res_height, int res_width);
 
 template <typename T>
 void PutValues(T *arr, int size)
 {
     for (int i = 0; i < size; ++i) {
-        arr[i] = i % 256 + 1;
+        arr[i] = i % 256 - 128;
     }
 }
 
@@ -37,12 +37,12 @@ void TestTensorToMatrix(int srcC, int srcH, int srcW,
     int kernelY, int kernelX, int dilationY, int dilationX, int strideY, int strideX,
     int padY, int padX, int padH, int padW)
 {
-    auto tensor = new uint8_t[srcH * srcW * srcC];
+    auto tensor = new int8_t[srcH * srcW * srcC];
     PutValues(tensor, srcH * srcW * srcC);
     npuemulator::Tensor src(tensor, srcH, srcW, srcC);
     int dstH = (srcH + padY + padH - (dilationY * (kernelY - 1) + 1)) / strideY + 1;
     int dstW = (srcW + padX + padW - (dilationX * (kernelX - 1) + 1)) / strideX + 1;
-    auto matrix = new uint8_t[dstH * dstW * srcC * kernelY * kernelX];
+    auto matrix = new int8_t[dstH * dstW * srcC * kernelY * kernelX];
     auto ptr_mat = matrix;
     TensorToMatrix(src, {dilationY, dilationY}, {padY, padH, padX, padW}, {strideY, strideX}, matrix, kernelY, kernelX, dstH, dstW);
     for (int dy = 0; dy < dstH; ++dy)
@@ -70,7 +70,7 @@ void TestTensorToMatrix(int srcC, int srcH, int srcW,
     delete[] tensor;
 }
 
-void GetParamsAndCreateTestFile(uint8_t *tensor, uint8_t *filter, int height, int width, int channels, int filter_height, int filter_width, int filter_channels,
+void GetParamsAndCreateTestFile(int8_t *tensor, int8_t *filter, int height, int width, int channels, int filter_height, int filter_width, int filter_channels,
     int dilation_y, int dilation_x, int stride_y, int stride_x, int pad_top, int pad_left, int pad_bot, int pad_right)
 {
     auto cls = [](std::ofstream *s) {
@@ -92,7 +92,7 @@ void GetParamsAndCreateTestFile(uint8_t *tensor, uint8_t *filter, int height, in
     *test_file << (int)*filter << '\n';
 }
 
-void CheckResults(uint8_t *res, int size)
+void CheckResults(int8_t *res, int size)
 {
     auto cls = [](std::ifstream *s) {
         s->close();
@@ -109,24 +109,24 @@ void CheckResults(uint8_t *res, int size)
 void TestConv2D(int height, int width, int channels, int filter_height, int filter_width, int filter_channels,
     int dilation_y, int dilation_x, int stride_y, int stride_x, int pad_top, int pad_left, int pad_bot, int pad_right)
 {
-    auto tensor = new uint8_t[height * width * channels];
+    auto tensor = new int8_t[height * width * channels];
     PutValues(tensor, height * width * channels);
     npuemulator::Tensor src(tensor, height, width, channels);
-    auto filter = new uint8_t[filter_height * filter_width * channels * filter_channels];
+    auto filter = new int8_t[filter_height * filter_width * channels * filter_channels];
     npuemulator::Tensor fil(filter, filter_height, filter_width, channels, filter_channels);
     PutValues(filter, filter_height * filter_width * channels * filter_channels);
     GetParamsAndCreateTestFile(tensor, filter, height, width, channels, filter_height, filter_width, filter_channels,
         dilation_y, dilation_x, stride_y, stride_x, pad_top, pad_left, pad_bot, pad_right);
     int res_height = (height + pad_top + pad_bot - (dilation_y * (filter_height - 1) + 1)) / stride_y + 1;
     int res_width = (width + pad_left + pad_right - (dilation_x * (filter_width - 1) + 1)) / stride_x + 1;
-    auto res = new uint8_t[res_width * res_height * filter_channels];
+    auto res = new int8_t[res_width * res_height * filter_channels];
     npuemulator::Tensor r(res, res_height, res_width, filter_channels);
-    auto tensor_matrix = new uint8_t[res_height * res_width * filter_height * filter_width * channels];
+    auto tensor_matrix = new int8_t[res_height * res_width * filter_height * filter_width * channels];
     npuemulator::Matrix src_mat(tensor_matrix, res_height * res_width, filter_height * filter_width * channels);
     int reord_height = (filter_height * filter_width * channels + 1) & -2;
     int reord_width = (filter_channels + 31) & -32;
-    auto filter_reordered_mat = new uint8_t[NPUEMUL_THREADS.Count() * reord_height * reord_width];
-    npuemulator::Matrix reord(filter_reordered_mat, NPUEMUL_THREADS.Count() * reord_height, reord_width);
+    auto filter_reordered_mat = new int8_t[2 * NPUEMUL_THREADS.Count() * reord_height * reord_width];
+    npuemulator::Matrix reord(filter_reordered_mat, NPUEMUL_THREADS.Count() * reord_height, 2 * reord_width);
     npuemulator::Conv2D(src, fil, {dilation_y, dilation_y}, {pad_top, pad_bot, pad_left, pad_right}, {stride_y, stride_x}, r, src_mat, reord);
     std::system("python -q tests/Conv2DTest.py");
     CheckResults(res, res_height * res_width * filter_channels);
