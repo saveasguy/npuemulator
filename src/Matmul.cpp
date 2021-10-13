@@ -37,23 +37,22 @@ void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2)
 }
 
 extern "C" void Microkernel(const int8_t *mat1, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int kernel_height, int kernel_width, int8_t *bias, npuemulator::Activation f);
+    int8_t *res, int res_width, int kernel_height, int kernel_width, int8_t *bias);
 
 inline void ComputeColumn(const int8_t *mat1, int mat1_height, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int kernel_width, int8_t *bias, npuemulator::Activation f)
+    int8_t *res, int res_width, int kernel_width, int8_t *bias)
 {
     for (; mat1_height >= 4; mat1_height -=4) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, 4, kernel_width, bias, f);
+        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, 4, kernel_width, bias);
         mat1 += 4 * mat1_width;
         res += 4 * res_width;
     }
     if (mat1_height) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, mat1_height, kernel_width, bias, f);
+        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, mat1_height, kernel_width, bias);
     }
 }
 
-void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer,
-    Vector bias, Activation f)
+void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
     if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != mat1.height) {
         std::cerr << "npuemulator: Matmul: wrong sides!" << std::endl;
@@ -75,7 +74,7 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
         bias_offset = 32;
     }
     for (; mat2.width >= 32; mat2.width -= 32) {
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, 32, bias.data, f);
+        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, 32, bias.data);
         mat2_buffer.data += 64 * mat2.height;
         res.data += 32;
         bias.data += bias_offset;
@@ -88,11 +87,11 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
             memcpy(b, bias.data, bias.length);
             bias.data = b;
         }
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, mat2.width, bias.data, f);
+        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, mat2.width, bias.data);
     }
 }
 
-void MatmulAsync(uint8_t *args)
+void MatmulWrapper(int8_t *args)
 {
     constexpr size_t STRUCT_MAT_SIZE = sizeof(npuemulator::Matrix);
     constexpr size_t STRUCT_VEC_SIZE = sizeof(npuemulator::Vector);
@@ -101,20 +100,17 @@ void MatmulAsync(uint8_t *args)
     auto res = *reinterpret_cast<npuemulator::Matrix *>(args + 2 * STRUCT_MAT_SIZE);
     auto mat2_buffer = *reinterpret_cast<npuemulator::Matrix *>(args + 3 * STRUCT_MAT_SIZE);
     auto bias = *reinterpret_cast<npuemulator::Vector *>(args + 4 * STRUCT_MAT_SIZE);
-    auto f = *reinterpret_cast<npuemulator::Activation *>(args + 4 * STRUCT_MAT_SIZE + STRUCT_VEC_SIZE);
-    npuemulator::Matmul(mat1, mat2, res, mat2_buffer, bias, f);
+    npuemulator::Matmul(mat1, mat2, res, mat2_buffer, bias);
 }
 
-#define PUSH_MATMUL_ARGS(ARGS, MAT1, MAT2, RES, MAT2_BUFFER, BIAS, F) \
-    *reinterpret_cast<npuemulator::Matrix *>(ARGS) = MAT1; \
-    *reinterpret_cast<npuemulator::Matrix *>(ARGS + sizeof(npuemulator::Matrix)) = MAT2; \
-    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 2 * sizeof(npuemulator::Matrix)) = RES; \
-    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 3 * sizeof(npuemulator::Matrix)) = MAT2_BUFFER; \
-    *reinterpret_cast<npuemulator::Vector *>(ARGS + 4 * sizeof(npuemulator::Matrix)) = BIAS; \
-    *reinterpret_cast<npuemulator::Activation *>(ARGS + 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector)) = F;
+#define PUSH_MATMUL_ARGS(ARGS, MAT1, MAT2, RES, MAT2_BUFFER, BIAS)\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS) = MAT1;\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS + sizeof(npuemulator::Matrix)) = MAT2;\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 2 * sizeof(npuemulator::Matrix)) = RES;\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 3 * sizeof(npuemulator::Matrix)) = MAT2_BUFFER;\
+    *reinterpret_cast<npuemulator::Vector *>(ARGS + 4 * sizeof(npuemulator::Matrix)) = BIAS;
 
-void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer,
-    Vector bias, Activation f)
+void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
     int n_threads = NPUEMUL_THREADS.Count();
     if (mat1.height < n_threads) {
@@ -127,20 +123,20 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
     mat1.height /= n_threads;
     int mat1_offset = mat1.height * mat1.width;
     int res_offset = mat1.height * mat2.width;
-    constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector) + sizeof(npuemulator::Activation);
-    uint8_t (*args)[ARGS_SIZE] = new uint8_t[n_threads - 1][ARGS_SIZE];
+    constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector);
+    auto (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
     int i = 0;
     for (; i < n_threads - 1; ++i) {
-        PUSH_MATMUL_ARGS(args[i], mat1, mat2, res, mat2_buffer, bias, f);
+        PUSH_MATMUL_ARGS(args[i], mat1, mat2, res, mat2_buffer, bias);
         mat1.data += mat1_offset;
         res.data += res_offset;
         mat2_buffer.data += mat2_buffer_offset;
         mat2_buffer.height -= mat2_buffer_height;
         mat1_height -= mat1.height;
-        NPUEMUL_THREADS.RunTask(MatmulAsync, args[i]);
+        NPUEMUL_THREADS.RunTask(MatmulWrapper, args[i]);
     }
     mat1.height = mat1_height;
-    Matmul(mat1, mat2, res, mat2_buffer, bias, f);
+    Matmul(mat1, mat2, res, mat2_buffer, bias);
     NPUEMUL_THREADS.WaitThreads();
     delete[] args;
 }

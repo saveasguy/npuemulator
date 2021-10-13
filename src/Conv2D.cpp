@@ -42,19 +42,57 @@ void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npu
     }
 }
 
-void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_buffer)
+void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_buffer, Matrix filter_buffer,
+    Vector bias)
 {
-    TensorToMatrix(src, dilation, pad, stride, src_mat.data, filter.height, filter.width, res.height, res.width);
+    TensorToMatrix(src, dilation, pad, stride, src_buffer.data, filter.height, filter.width, res.height, res.width);
     Matrix res_mat(res.data, res.height * res.width, res.channels);
     Matrix filter_mat(filter.data, filter.height * filter.width * filter.batches, filter.channels);
-    Matmul(src_mat, filter_mat, res_mat, filter_buffer);
+    Matmul(src_buffer, filter_mat, res_mat, filter_buffer, bias);
 }
 
-void npuemulator::ParallelConv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_buffer)
+void Conv2DWrapper(int8_t *args)
+{
+
+}
+
+#define TENSOR_SIZE sizeof(npuemulator::Tensor)
+#define DILATION_SIZE sizeof(npuemulator::Dilation)
+#define PAD_SIZE sizeof(npuemulator::Padding)
+#define STRIDE_SIZE sizeof(npuemulator::Stride)
+#define MATRIX_SIZE sizeof(npuemulator::Matrix)
+#define VECTOR_SIZE sizeof(npuemulator::Vector)
+
+#define PUSH_CONV2D_ARGS(ARGS, SRC, FILTER, DILATION, PAD, STRIDE, RES, SRC_BUFFER, FILTER_BUFFER, BIAS)\
+    *reinterpret_cast<npuemulator::Tensor *>(ARGS) = SRC;\
+    *reinterpret_cast<npuemulator::Tensor *>(ARGS + TENSOR_SIZE) = FILTER;\
+    *reinterpret_cast<npuemulator::Dilation *>(ARGS + 2 * TENSOR_SIZE) = DILATION;\
+    *reinterpret_cast<npuemulator::Padding *>(ARGS + 2 * TENSOR_SIZE + DILATION_SIZE) = PAD;\
+    *reinterpret_cast<npuemulator::Stride *>(ARGS + 2 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE) = STRIDE;\
+    *reinterpret_cast<npuemulator::Tensor *>(ARGS + 2 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE + STRIDE_SIZE) = RES;\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 3 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE + STRIDE_SIZE) = SRC_BUFFER;\
+    *reinterpret_cast<npuemulator::Matrix *>(ARGS + 3 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE + STRIDE_SIZE + MATRIX_SIZE) = FILTER_BUFFER;\
+    *reinterpret_cast<npuemulator::Vector *>(ARGS + 3 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE + STRIDE_SIZE + 2 * MATRIX_SIZE) = BIAS;
+
+void npuemulator::ParallelConv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_buffer, Matrix filter_buffer,
+    Vector bias)
 {
     int n_threads = NPUEMUL_THREADS.Count();
-    int i = 0;
-    for (; i < n_threads - 1; ++i) {
+    if (res.width < n_threads) {
+        Conv2D(src, filter, dilation, pad, stride, res, src_buffer, filter_buffer, bias);
+        return;
+    }
+    constexpr size_t ARGS_SIZE = 3 * TENSOR_SIZE + DILATION_SIZE + PAD_SIZE + STRIDE_SIZE + 2 * MATRIX_SIZE + VECTOR_SIZE;
+    auto (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
+    int i = n_threads - 1;
+    if (i) {
+        PUSH_CONV2D_ARGS(args[i], src, filter, dilation, pad, stride, res, src_buffer, filter_buffer, bias);
+        NPUEMUL_THREADS.RunTask(Conv2DWrapper, args[i]);
+        pad.top = 0;
+        --i;
+    }
+    for (; i; --i) {
 
     }
+    delete[] args;
 }

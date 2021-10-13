@@ -1,7 +1,7 @@
 public Microkernel
 
 .data
-shuffle_mask byte 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14
+shuffle_mask db 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14
 
 .code
 
@@ -63,12 +63,7 @@ l6:
 Microkernel:
     push    rbp
     mov rbp,    rsp
-    push    rbx
-    push    rsi
-    push    rdi
     push    r12
-    push    r13
-    push    r14
     sub rsp,    8 * 32 + 8
     movdqu  xmmword ptr [rsp],  xmm6
     movdqu  xmmword ptr [rsp + 16], xmm7
@@ -145,39 +140,29 @@ loop_head:
     vpaddw  ymm6,   ymm6,   ymm8
     vpaddw  ymm7,   ymm7,   ymm9
 no_bias:
-    mov edi,    dword ptr [rbp + 48]
-    mov esi,    dword ptr [rbp + 64]
+    mov r10d,   dword ptr [rbp + 48]
+    mov r11d,   dword ptr [rbp + 64]
     sub rsp,    32 * 6
-    mov r13,    rsp
-    mov rbx,    r9
-    mov r14,    qword ptr [rbp + 80]
+    mov r8, rsp
     vmovdqu ymmword ptr [rsp],  ymm2
     vmovdqu ymmword ptr [rsp + 32], ymm3
     vmovdqu ymmword ptr [rsp + 64], ymm4
     vmovdqu ymmword ptr [rsp + 96], ymm5
     vmovdqu ymmword ptr [rsp + 128],    ymm6
     vmovdqu ymmword ptr [rsp + 160],    ymm7
-    sub rsp,    24
 store_loop_head:
-    mov rcx,    rbx
-    mov edx,    esi
+    mov rcx,    r9
+    mov edx,    r11d
     jmp StoreRow
 store_row_return_label:
-    test    r14,    r14
-    jz  no_activation
-    mov rcx,    rbx
-    mov edx,    esi
-    mov r9, rbx
-    call r14
-no_activation:
-    vmovdqu ymm0,   ymmword ptr [r13]
-    vmovdqu ymm1,   ymmword ptr [r13 + 32]
-    add r13,    64
-    add rbx,    rdi
+    vmovdqu ymm0,   ymmword ptr [r8]
+    vmovdqu ymm1,   ymmword ptr [r8 + 32]
+    add r8, 64
+    add r9, r10
     sub r12d,   1
     jne store_loop_head
 epilogue:
-    add rsp,    32 * 6 + 24
+    add rsp,    32 * 6
     movdqu  xmm6,   xmmword ptr [rsp]
     movdqu  xmm7,   xmmword ptr [rsp + 16]
     movdqu  xmm8,   xmmword ptr [rsp + 2 * 16]
@@ -189,12 +174,7 @@ epilogue:
     movdqu  xmm14,  xmmword ptr [rsp + 8 * 16]
     movdqu  xmm15,  xmmword ptr [rsp + 9 * 16]
     add rsp,    8 * 32 + 8
-    pop r14
-    pop r13
     pop r12
-    pop rdi
-    pop rsi
-    pop rbx
     vzeroupper
     leave
     ret

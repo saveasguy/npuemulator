@@ -5,8 +5,6 @@
 
 namespace npuemulator {
 
-typedef void (*Activation)(int8_t *, int, int8_t *);
-
 struct Vector
 {
     int8_t *data;
