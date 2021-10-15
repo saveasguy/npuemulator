@@ -5,25 +5,35 @@
 
 namespace npuemulator {
 
+struct Vector
+{
+    int8_t *data;
+    int length;
+
+public:
+    Vector(int8_t *data_, int length_);
+};
+
 struct Matrix
 {
-    uint8_t *data;
+    int8_t *data;
     int height;
     int width;
 
 public:
-    Matrix(uint8_t *data_, int height_, int width_);
+    Matrix(int8_t *data_, int height_, int width_);
 };
 
 struct Tensor
 {
-    uint8_t *data;
+    int8_t *data;
+    int batches;
     int height;
     int width;
     int channels;
 
 public:
-    Tensor(uint8_t *data_, int height_, int width_, int n_channels);
+    Tensor(int8_t *data_, int height_, int width_, int n_channels, int n_batches = 1);
 };
 
 struct Dilation

@@ -1,10 +1,9 @@
-.data
-shuffle_mask byte 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14
+public Microkernel
 
+.data
+shuffle_mask db 1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 14
 
 .code
-public Microkernel
-public store_results
 
 StoreRow:
     mov eax,    0FF00h
@@ -102,57 +101,45 @@ Microkernel:
 loop_head:
     vlddqu  ymm8,   ymmword ptr [r8]
     vlddqu  ymm9,   ymmword ptr [r8 + 32]
-    vpbroadcastw    ymm10,  word ptr [rcx]
-    vpbroadcastw    ymm11,  word ptr [rcx + rdx]
-    vpbroadcastw    ymm12,  word ptr [rcx + r10]
-    vpbroadcastw    ymm13,  word ptr [rcx + r11]
-    vpmaddubsw  ymm14,  ymm8,   ymm10
-    vpmaddubsw  ymm10,  ymm9,   ymm10
-    vpmaddubsw  ymm15,  ymm8,   ymm11
-    vpmaddubsw  ymm11,  ymm9,   ymm11
+    vpbroadcastb    ymm10,  byte ptr [rcx]
+    vpbroadcastb    ymm11,  byte ptr [rcx + rdx]
+    vpmullw ymm14,  ymm8,   ymm10
+    vpmullw ymm10,  ymm9,   ymm10
+    vpmullw ymm15,  ymm8,   ymm11
+    vpmullw ymm11,  ymm9,   ymm11
     vpaddw  ymm0,   ymm0,   ymm14
     vpaddw  ymm1,   ymm1,   ymm10
     vpaddw  ymm2,   ymm2,   ymm15
     vpaddw  ymm3,   ymm3,   ymm11
-    vpmaddubsw  ymm14,  ymm8,   ymm12
-    vpmaddubsw  ymm12,  ymm9,   ymm12
-    vpmaddubsw  ymm15,  ymm8,   ymm13
-    vpmaddubsw  ymm13,  ymm9,   ymm13
+    vpbroadcastb    ymm12,  byte ptr [rcx + r10]
+    vpbroadcastb    ymm13,  byte ptr [rcx + r11]
+    vpmullw ymm14,  ymm8,   ymm12
+    vpmullw ymm12,  ymm9,   ymm12
+    vpmullw ymm15,  ymm8,   ymm13
+    vpmullw ymm13,  ymm9,   ymm13
     vpaddw  ymm4,   ymm4,   ymm14
     vpaddw  ymm5,   ymm5,   ymm12
     vpaddw  ymm6,   ymm6,   ymm15
     vpaddw  ymm7,   ymm7,   ymm13
     add r8, 64
-    add rcx,    2
-    sub eax,    2
-    cmp eax,    2
-    jae  loop_head
-    test    eax,    eax
-    jz  store_results
-    vlddqu  ymm8,   ymmword ptr [r8]
-    vlddqu  ymm9,   ymmword ptr [r8 + 32]
-    vpbroadcastb    ymm10,  byte ptr [rcx]
-    vpbroadcastb    ymm11,  byte ptr [rcx + rdx]
-    vpbroadcastb    ymm12,  byte ptr [rcx + r10]
-    vpbroadcastb    ymm13,  byte ptr [rcx + r11]
-    vpmaddubsw  ymm14,  ymm8,   ymm10
-    vpmaddubsw  ymm10,  ymm9,   ymm10
-    vpmaddubsw  ymm15,  ymm8,   ymm11
-    vpmaddubsw  ymm11,  ymm9,   ymm11
-    vpaddw  ymm0,   ymm0,   ymm14
-    vpaddw  ymm1,   ymm1,   ymm10
-    vpaddw  ymm2,   ymm2,   ymm15
-    vpaddw  ymm3,   ymm3,   ymm11
-    vpmaddubsw  ymm14,  ymm8,   ymm12
-    vpmaddubsw  ymm12,  ymm9,   ymm12
-    vpmaddubsw  ymm15,  ymm8,   ymm13
-    vpmaddubsw  ymm13,  ymm9,   ymm13
-    vpaddw  ymm4,   ymm4,   ymm14
-    vpaddw  ymm5,   ymm5,   ymm12
-    vpaddw  ymm6,   ymm6,   ymm15
-    vpaddw  ymm7,   ymm7,   ymm13
+    add rcx,    1
+    sub eax,    1
+    jne loop_head
 ; END LOOP
-store_results:
+    mov r10,    qword ptr [rbp + 72]
+    test    r10,    r10
+    jz  no_bias
+    vpmovsxbw   ymm8,   xmmword ptr [r10]
+    vpmovsxbw   ymm9,   xmmword ptr [r10 + 16]
+    vpaddw  ymm0,   ymm0,   ymm8
+    vpaddw  ymm1,   ymm1,   ymm9
+    vpaddw  ymm2,   ymm2,   ymm8
+    vpaddw  ymm3,   ymm3,   ymm9
+    vpaddw  ymm4,   ymm4,   ymm8
+    vpaddw  ymm5,   ymm5,   ymm9
+    vpaddw  ymm6,   ymm6,   ymm8
+    vpaddw  ymm7,   ymm7,   ymm9
+no_bias:
     mov r10d,   dword ptr [rbp + 48]
     mov r11d,   dword ptr [rbp + 64]
     sub rsp,    32 * 6

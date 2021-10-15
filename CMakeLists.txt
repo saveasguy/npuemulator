@@ -1,9 +1,9 @@
-project(npuemul C CXX ASM_MASM)
+project(npuemul C CXX)
 cmake_minimum_required(VERSION 3.21)
 
 include(ExternalProject)
 
-set(ASM_SRC src/MatmulMicrokernel.obj src/mtrx_mul.obj)
+set(ASM_SRC src/MatmulMicrokernel.obj)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-O3 -g -march=native)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -22,7 +22,7 @@ ExternalProject_Add(googlebenchmark
 
 ExternalProject_Add(googletest
     GIT_REPOSITORY https://github.com/google/googletest
-    CMAKE_ARGS -DBUILD_GMOCK=OFF -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_GMOCK=OFF -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
 
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include)

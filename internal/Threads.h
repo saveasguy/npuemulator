@@ -21,8 +21,8 @@ namespace npuemulator {
 
 struct ThreadTask
 {
-	void (*proc)(uint8_t *);
-	uint8_t *args;
+	void (*proc)(int8_t *);
+	int8_t *args;
 };
 
 class Threads
@@ -34,13 +34,13 @@ public:
 		return inst;
 	}
 
-	void RunTask(void (*proc)(uint8_t *), uint8_t *args);
+	void RunTask(void (*proc)(int8_t *), int8_t *args);
 
 	void WaitThreads();
 
-	size_t Count()
+	int Count()
 	{
-		return _additional_threads.size() + 1;
+		return static_cast<int>(_additional_threads.size() + 1);
 	}
 
 private:

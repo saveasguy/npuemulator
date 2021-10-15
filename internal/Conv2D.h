@@ -5,8 +5,13 @@
 
 namespace npuemulator {
 
-void Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_mat, Matrix filter_mat);
+void Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_buffer, Matrix filter_buffer,
+    Vector bias = Vector(nullptr, 0));
 
+/*
+void ParallelConv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_buffer, Matrix filter_buffer,
+    Vector bias = Vector(nullptr, 0));
+*/
 }
 
 #endif

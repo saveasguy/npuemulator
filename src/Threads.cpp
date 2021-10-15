@@ -20,7 +20,7 @@ npuemulator::Threads::Threads() :
 	_RunThreads(n_threads_per_core);
 }
 
-void npuemulator::Threads::RunTask(void (*proc)(uint8_t *), uint8_t *args)
+void npuemulator::Threads::RunTask(void (*proc)(int8_t *), int8_t *args)
 {
 	++_n_working_threads;
 	{
