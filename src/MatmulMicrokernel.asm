@@ -103,8 +103,6 @@ loop_head:
     vlddqu  ymm9,   ymmword ptr [r8 + 32]
     vpbroadcastb    ymm10,  byte ptr [rcx]
     vpbroadcastb    ymm11,  byte ptr [rcx + rdx]
-    vpbroadcastb    ymm12,  byte ptr [rcx + r10]
-    vpbroadcastb    ymm13,  byte ptr [rcx + r11]
     vpmullw ymm14,  ymm8,   ymm10
     vpmullw ymm10,  ymm9,   ymm10
     vpmullw ymm15,  ymm8,   ymm11
@@ -113,6 +111,8 @@ loop_head:
     vpaddw  ymm1,   ymm1,   ymm10
     vpaddw  ymm2,   ymm2,   ymm15
     vpaddw  ymm3,   ymm3,   ymm11
+    vpbroadcastb    ymm12,  byte ptr [rcx + r10]
+    vpbroadcastb    ymm13,  byte ptr [rcx + r11]
     vpmullw ymm14,  ymm8,   ymm12
     vpmullw ymm12,  ymm9,   ymm12
     vpmullw ymm15,  ymm8,   ymm13

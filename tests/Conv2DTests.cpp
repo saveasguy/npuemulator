@@ -162,6 +162,12 @@ TEST(CONV2D, Conv2D_Kernel3x3_Tensor128x128x128)
     TestConv2D(SIZE, SIZE, SIZE, 3, 3, SIZE, 1, 1, 1, 1, 1, 1, 1, 1);
 }
 
+TEST(CONV2D, Conv2D_Kernel3x3_Tensor112x112x128)
+{
+    constexpr int SIZE = 128;
+    TestConv2D(112, 112, SIZE, 3, 3, SIZE, 1, 1, 1, 1, 1, 1, 1, 1);
+}
+
 TEST(CONV2D, Conv2D_Kernel1x1_Tensor3x3x3)
 {
     constexpr int SIZE = 3;
