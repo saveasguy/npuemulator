@@ -12,7 +12,7 @@ static void BM_ReLu(benchmark::State &state)
     npuemulator::Vector src(v1, SIZE);
     npuemulator::Vector dst(v2, SIZE);
     for (auto _ : state) {
-        npuemulator::ReLu(src, dst);
+        npuemulator::ParallelReLu(src, dst);
     }
 }
 BENCHMARK(BM_ReLu)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
