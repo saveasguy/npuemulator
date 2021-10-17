@@ -18,7 +18,7 @@ void TestReLu(int length)
     auto v2 = new int8_t[length];
     npuemulator::Vector src(v1, length);
     npuemulator::Vector dst(v2, length);
-    npuemulator::ParallelReLu(src, dst);
+    npuemulator::ReLu(src, dst);
     for (int i = 0; i < length; ++i) {
         if (v1[i] > 0) {
             ASSERT_EQ(v1[i], v2[i]);

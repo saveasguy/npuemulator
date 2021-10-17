@@ -36,6 +36,6 @@ else()
     target_link_libraries(tests npuemul gtest_maind gtestd)
 endif()
 
-add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp benchmarks/ReLuBenchmarks.cpp)
+add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp)
 add_dependencies(benchmarks googlebenchmark)
 target_link_libraries(benchmarks npuemul benchmark_main benchmark shlwapi)

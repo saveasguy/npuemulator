@@ -7,8 +7,6 @@ namespace npuemulator {
 
 void ReLu(Vector src, Vector dst);
 
-void ParallelReLu(Vector src, Vector dst);
-
 }
 
 #endif
