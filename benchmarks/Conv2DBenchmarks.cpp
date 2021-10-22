@@ -33,4 +33,4 @@ static void BM_Conv2D(benchmark::State &state)
     delete[] src_matrix;
     delete[] filter_buffer;
 }
-BENCHMARK(BM_Conv2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(15);
+//BENCHMARK(BM_Conv2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(15);

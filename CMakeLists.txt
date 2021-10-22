@@ -11,7 +11,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 include_directories(include internal)
-add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/Threads.cpp src/Types.cpp)
+add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/FullyConnected.cpp src/Threads.cpp src/Types.cpp)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
@@ -28,7 +28,7 @@ ExternalProject_Add(googletest
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-add_executable(tests tests/TestsMain.cpp tests/MatmulTests.cpp tests/Conv2DTests.cpp tests/ReLuTests.cpp)
+add_executable(tests tests/TestsMain.cpp tests/MatmulTests.cpp tests/ReLuTests.cpp tests/FCTests.cpp tests/Conv2DTests.cpp)
 add_dependencies(tests googletest)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_libraries(tests npuemul gtest_main gtest)
@@ -36,6 +36,6 @@ else()
     target_link_libraries(tests npuemul gtest_maind gtestd)
 endif()
 
-add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp)
+add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp benchmarks/FCBenchmarks.cpp)
 add_dependencies(benchmarks googlebenchmark)
 target_link_libraries(benchmarks npuemul benchmark_main benchmark shlwapi)

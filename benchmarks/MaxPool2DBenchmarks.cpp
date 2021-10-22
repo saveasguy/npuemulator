@@ -17,4 +17,4 @@ static void BM_MaxPool2D(benchmark::State &state)
     delete[] psrc;
     delete[] pdst;
 }
-BENCHMARK(BM_MaxPool2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_MaxPool2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
