@@ -19,4 +19,4 @@ static void BM_FC(benchmark::State &state)
     delete[] s;
     delete[] d;
 }
-BENCHMARK(BM_FC)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_FC)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);

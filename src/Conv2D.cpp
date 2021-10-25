@@ -45,12 +45,14 @@ void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npu
 void npuemulator::Conv2D(Tensor src, Tensor filter, Dilation dilation, Padding pad, Stride stride, Tensor res, Matrix src_buffer, Matrix filter_buffer,
     Vector bias)
 {
-    if (src_buffer.height < res.height * res.width || src_buffer.width < filter.height * filter.width * src.channels) {
+    if (src_buffer.height * src_buffer.width < res.height * res.width * filter.height * filter.width * src.channels) {
 
         std::cerr << "npuemulator: Conv2D: Not enough space for src_buffer!" << std::endl;
         exit(1);
     }
     TensorToMatrix(src, dilation, pad, stride, src_buffer.data, filter.height, filter.width, res.height, res.width);
+    src_buffer.height = res.height * res.width;
+    src_buffer.width = filter.height * filter.width * src.channels;
     Matrix res_mat(res.data, res.height * res.width, res.channels);
     Matrix filter_mat(filter.data, filter.height * filter.width * filter.batches, filter.channels);
     ParallelMatmul(src_buffer, filter_mat, res_mat, filter_buffer, bias);

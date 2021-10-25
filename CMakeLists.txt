@@ -10,7 +10,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/arch:AVX2)
 endif()
 
-include_directories(include internal)
+include_directories(include)
 add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/FullyConnected.cpp src/Threads.cpp src/Types.cpp)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
@@ -36,6 +36,8 @@ else()
     target_link_libraries(tests npuemul gtest_maind gtestd)
 endif()
 
-add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp benchmarks/FCBenchmarks.cpp)
+add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp
+    benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp benchmarks/FCBenchmarks.cpp
+    benchmarks/VGG16Benchmarks.cpp)
 add_dependencies(benchmarks googlebenchmark)
 target_link_libraries(benchmarks npuemul benchmark_main benchmark shlwapi)

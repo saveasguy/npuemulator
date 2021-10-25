@@ -54,8 +54,10 @@ inline void ComputeColumn(const int8_t *mat1, int mat1_height, int mat1_width, c
 
 void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
-    if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != mat1.height) {
-        std::cerr << "npuemulator: Matmul: wrong sides!" << std::endl;
+    if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != res.height) {
+        std::cerr << "npuemulator: Matmul: wrong sides!\n\t" <<
+            mat1.height << 'x' << mat1.width << " mul " << mat2.height << 'x' << mat2.width <<
+            " = " << res.height << 'x' << res.width << std::endl;
         exit(1);
     }
     int mat2_width_multiply32 = (mat2.width + 31) & -32;
@@ -120,7 +122,7 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
     int mat2_buffer_height = mat2_buffer.height / n_threads;
     int mat2_buffer_offset = mat2_buffer_height * mat2_buffer.width;
     int mat1_height = mat1.height;
-    mat1.height /= n_threads;
+    res.height = mat1.height /= n_threads;
     int mat1_offset = mat1.height * mat1.width;
     int res_offset = mat1.height * mat2.width;
     constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector);
