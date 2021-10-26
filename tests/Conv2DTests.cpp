@@ -102,7 +102,7 @@ void CheckResults(int8_t *res, int size)
     for (int i = 0; i < size; ++i) {
         int r = 0;
         *test_file >> r;
-        ASSERT_EQ((int)*res++, r);
+        ASSERT_EQ(*res++, (int8_t)r);
     }
 }
 

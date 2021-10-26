@@ -31,9 +31,9 @@ static void BM_Matmul256(benchmark::State &state)
 
 static void BM_Matmul1024(benchmark::State &state)
 {
-    constexpr size_t SIZE1 = 1024;
-    constexpr size_t SIZE2 = 1024;
-    constexpr size_t SIZE3 = 1024;
+    constexpr size_t SIZE1 = 2048;
+    constexpr size_t SIZE2 = 2048;
+    constexpr size_t SIZE3 = 2048;
     int8_t *a = new int8_t[SIZE1 * SIZE2];
     npuemulator::Matrix m1(a, SIZE1, SIZE2);
     int8_t *b = new int8_t[SIZE2 * SIZE3];
@@ -52,4 +52,4 @@ static void BM_Matmul1024(benchmark::State &state)
     delete[] c;
     delete[] d;
 }
-//BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(40);
+//BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(10);

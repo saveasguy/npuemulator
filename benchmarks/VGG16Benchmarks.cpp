@@ -1,7 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include <Conv2D.h>
-#include <FullyConnected.h>
+#include <Dense.h>
 #include <MaxPool2D.h>
 #include <Types.h>
 #include <ReLu.h>
@@ -79,11 +79,11 @@ void vgg16()
         {src_buffer, SRC_BUFFFER_HEIGHT, SRC_BUFFER_WIDTH}, {filter_buffer, SRC_FILTER_HEIGHT, SRC_FILTER_WIDTH});
     ReLu({dst, 14 * 14 * 512}, {src, 14 * 14 * 512});
     MaxPool2D({src, 14, 14, 512}, 2, 2, {2, 2}, {0, 0, 0, 0}, {dst, 7, 7, 512});
-    FullyConnected({weights1, 4096, 7 * 7 * 512}, {dst, 7 * 7 * 512}, {src, 4096});
+    Dense({weights1, 4096, 7 * 7 * 512}, {dst, 7 * 7 * 512}, {src, 4096});
     ReLu({src, 4096}, {dst, 4096});
-    FullyConnected({weights2, 4096, 4096}, {dst, 4096}, {src, 4096});
+    Dense({weights2, 4096, 4096}, {dst, 4096}, {src, 4096});
     ReLu({src, 4096}, {dst, 4096});
-    FullyConnected({weights3, 1000, 4096}, {dst, 4096}, {src, 1000});
+    Dense({weights3, 1000, 4096}, {dst, 4096}, {src, 1000});
     ReLu({src, 1000}, {dst, 1000});
 }
 
@@ -93,4 +93,4 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);

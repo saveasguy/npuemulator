@@ -138,6 +138,7 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
         NPUEMUL_THREADS.RunTask(MatmulWrapper, args[i]);
     }
     mat1.height = mat1_height;
+    res.height = mat1_height;
     Matmul(mat1, mat2, res, mat2_buffer, bias);
     NPUEMUL_THREADS.WaitThreads();
     delete[] args;

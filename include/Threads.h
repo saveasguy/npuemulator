@@ -30,6 +30,7 @@ class Threads
 public:
     static Threads &Instance()
     {
+        std::lock_guard<std::mutex> l(_inst_mutex);
         static Threads inst;
         return inst;
     }
@@ -72,7 +73,7 @@ private:
     std::atomic_int _n_working_threads;
     std::condition_variable _condition;
     std::mutex _q_mutex;
-
+    static std::mutex _inst_mutex;
     bool _processing;
 };
 

@@ -10,7 +10,7 @@
 
 static void BM_Conv2D(benchmark::State &state)
 {
-    constexpr int SIZE = 112, CHANNELS = 128, FILTER_SIZE = 3, FILTER_CHANNELS = 128;
+    constexpr int SIZE = 14, CHANNELS = 512, FILTER_SIZE = 3, FILTER_CHANNELS = 512;
     auto srct = new int8_t[SIZE * SIZE * CHANNELS];
     npuemulator::Tensor src(srct, SIZE, SIZE, CHANNELS);
     auto filtert = new int8_t[FILTER_SIZE * FILTER_SIZE * CHANNELS * FILTER_CHANNELS];
@@ -33,4 +33,4 @@ static void BM_Conv2D(benchmark::State &state)
     delete[] src_matrix;
     delete[] filter_buffer;
 }
-//BENCHMARK(BM_Conv2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(15);
+//BENCHMARK(BM_Conv2D)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(20);
