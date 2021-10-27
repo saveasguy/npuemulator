@@ -5,14 +5,14 @@
 #include <MaxPool2D.h>
 #include <Types.h>
 #include <ReLu.h>
-
+#include <Threads.h>
 
 constexpr size_t MAX_TENSOR_SIZE = 224 * 224 * 64;
 constexpr size_t MAX_FILTER_SIZE = 3 * 3 * 512 * 512;
 static int8_t *src = new int8_t[MAX_TENSOR_SIZE];
 static int8_t *dst = new int8_t[MAX_TENSOR_SIZE];
 static int8_t *src_buffer = new int8_t[MAX_TENSOR_SIZE * 3 * 3];
-static int8_t *filter_buffer = new int8_t[4 * 2 * MAX_FILTER_SIZE];
+static int8_t *filter_buffer = new int8_t[NPUEMUL_THREADS.Count() * 2 * MAX_FILTER_SIZE];
 static int8_t *filter1 = new int8_t[3 * 3 * 3 * 64];
 static int8_t *filter2 = new int8_t[3 * 3 * 64 * 64];
 static int8_t *filter3 = new int8_t[3 * 3 * 64 * 128];
@@ -34,7 +34,7 @@ using namespace npuemulator;
 void vgg16()
 {
     constexpr int SRC_BUFFFER_HEIGHT = 224 * 224, SRC_BUFFER_WIDTH = 3 * 3 * 64;
-    constexpr int SRC_FILTER_HEIGHT = 4 * 3 * 3 * 512, SRC_FILTER_WIDTH = 2 * 512;
+    int SRC_FILTER_HEIGHT = NPUEMUL_THREADS.Count() * 3 * 3 * 512, SRC_FILTER_WIDTH = 2 * 512;
     Conv2D({src, 224, 224, 3}, {filter1, 3, 3, 64, 3}, {1, 1}, {1, 1, 1, 1}, {1, 1}, {dst, 224, 224, 64},
         {src_buffer, SRC_BUFFFER_HEIGHT, SRC_BUFFER_WIDTH}, {filter_buffer, SRC_FILTER_HEIGHT, SRC_FILTER_WIDTH});
     ReLu({dst, 224 * 224 * 64}, {src, 224 * 224 * 64});
@@ -93,4 +93,4 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-//BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
+BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
