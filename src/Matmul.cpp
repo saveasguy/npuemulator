@@ -1,5 +1,7 @@
 #include "Matmul.h"
 
+#include <algorithm>
+
 #include <immintrin.h>
 
 #include "Threads.h"
@@ -37,27 +39,48 @@ void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2)
 }
 
 extern "C" void Microkernel(const int8_t *mat1, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int kernel_height, int kernel_width, int8_t *bias);
+    int8_t *res, int res_width, int8_t *bias, int kernel_height, int kernel_width, int internal_iterations);
 
-inline void ComputeColumn(const int8_t *mat1, int mat1_height, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int kernel_width, int8_t *bias)
+inline void ComputeColumn(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2,
+    npuemulator::Matrix res, npuemulator::Vector bias, int kernel_width, int internal_iterations)
 {
-    for (; mat1_height >= 4; mat1_height -=4) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, 4, kernel_width, bias);
-        mat1 += 4 * mat1_width;
-        res += 4 * res_width;
+    int i = mat1.height;
+    for (; i >= 4; i -=4) {
+        Microkernel(mat1.data, mat1.width, reordered_mat2.data, res.data, res.width, bias.data, 4, kernel_width, internal_iterations);
+        mat1.data += 4 * mat1.width;
+        res.data += 4 * res.width;
     }
-    if (mat1_height) {
-        Microkernel(mat1, mat1_width, reordered_mat2, res, res_width, mat1_height, kernel_width, bias);
+    if (i) {
+        Microkernel(mat1.data, mat1.width, reordered_mat2.data, res.data, res.width, bias.data, i, kernel_width, internal_iterations);
+    }
+}
+
+void Macrokernel(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2, npuemulator::Matrix res,
+    npuemulator::Vector bias, int internal_iterations, int bias_offset)
+{
+    int i = res.width;
+    for (; i >= 32; i -= 32) {
+        ComputeColumn(mat1, reordered_mat2, res, bias, 32, internal_iterations);
+        reordered_mat2.data += 64 * mat1.width;
+        res.data += 32;
+        bias.data += bias_offset;
+        bias.length -= bias_offset;
+    }
+    if (i) {
+        int8_t b[32];
+        if (bias.data) {
+            memset(b, 0, 32);
+            memcpy(b, bias.data, bias.length);
+            bias.data = b;
+        }
+        ComputeColumn(mat1, reordered_mat2, res, bias, i, internal_iterations);
     }
 }
 
 void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
     if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != res.height) {
-        std::cerr << "npuemulator: Matmul: wrong sides!\n\t" <<
-            mat1.height << 'x' << mat1.width << " mul " << mat2.height << 'x' << mat2.width <<
-            " = " << res.height << 'x' << res.width << std::endl;
+        std::cerr << "npuemulator: Matmul: wrong sides!" << std::endl;
         exit(1);
     }
     int mat2_width_multiply32 = (mat2.width + 31) & -32;
@@ -66,30 +89,23 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
         exit(1);
     }
     ReorderMat2(mat2, mat2_buffer);
-    auto i = mat2.width;
-    int bias_offset = 0;
-    if (bias.data) {
-        if (mat2.width != bias.length) {
-            std::cerr << "npuemulator: Matmul: wrong bias length!" << std::endl;
-            exit(1);
-        }
-        bias_offset = 32;
+    int bias_offset = bias.length ? 32 : 0;
+    if (bias.length != 0 && mat2.width != bias.length) {
+        std::cerr << "npuemulator: Matmul: wrong bias length!" << std::endl;
+        exit(1);
     }
-    for (; mat2.width >= 32; mat2.width -= 32) {
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, 32, bias.data);
-        mat2_buffer.data += 64 * mat2.height;
-        res.data += 32;
-        bias.data += bias_offset;
-        bias.length -= bias_offset;
+    const int l1_size = 32 * 1024;
+    int step = min(l1_size / 64, mat1.width);
+    int i = mat1.width;
+    memset(res.data, 0, res.height * res.width);
+    //for (; i >= step; i -= step)
+    {
+        Macrokernel(mat1, mat2_buffer, res, bias, mat1.width, bias_offset);
+        mat1.data += step;
+        mat2_buffer.data += 64 * step;
     }
-    if (mat2.width) {
-        int8_t b[32];
-        if (bias.data) {
-            memset(b, 0, 32);
-            memcpy(b, bias.data, bias.length);
-            bias.data = b;
-        }
-        ComputeColumn(mat1.data, mat1.height, mat1.width, mat2_buffer.data, res.data, res.width, mat2.width, bias.data);
+    if (i) {
+        //Macrokernel(mat1, mat2_buffer, res, bias, i, bias_offset);
     }
 }
 
@@ -120,19 +136,16 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
         return;
     }
     int mat2_buffer_height = mat2_buffer.height / n_threads;
-    int mat2_buffer_offset = mat2_buffer_height * mat2_buffer.width;
     int mat1_height = mat1.height;
     res.height = mat1.height /= n_threads;
-    int mat1_offset = mat1.height * mat1.width;
-    int res_offset = mat1.height * mat2.width;
     constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector);
     auto (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
     int i = 0;
     for (; i < n_threads - 1; ++i) {
         PUSH_MATMUL_ARGS(args[i], mat1, mat2, res, mat2_buffer, bias);
-        mat1.data += mat1_offset;
-        res.data += res_offset;
-        mat2_buffer.data += mat2_buffer_offset;
+        mat1.data += mat1.height * mat1.width;
+        res.data += mat1.height * mat2.width;
+        mat2_buffer.data += mat2_buffer_height * mat2_buffer.width;
         mat2_buffer.height -= mat2_buffer_height;
         mat1_height -= mat1.height;
         NPUEMUL_THREADS.RunTask(MatmulWrapper, args[i]);

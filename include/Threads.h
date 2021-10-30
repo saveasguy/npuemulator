@@ -25,15 +25,16 @@ struct ThreadTask
     int8_t *args;
 };
 
+
 class Threads
 {
 public:
     static Threads &Instance()
     {
-        //std::lock_guard<std::mutex> l(_inst_mutex);
         static Threads inst;
         return inst;
     }
+
 
     void RunTask(void (*proc)(int8_t *), int8_t *args);
 
@@ -70,10 +71,11 @@ private:
     std::vector<ThreadTask> _thread_tasks;
     std::queue<ThreadTask> _task_queue;
 
+    std::atomic_bool _initialized;
     std::atomic_int _n_working_threads;
     std::condition_variable _condition;
     std::mutex _q_mutex;
-    //static std::mutex _inst_mutex;
+
     bool _processing;
 };
 

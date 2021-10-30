@@ -2,8 +2,14 @@
 
 npuemulator::Threads::Threads() :
     _processing(true),
+    _initialized(false),
     _n_working_threads(0)
 {
+    bool expected = false;
+    bool changed = _initialized.compare_exchange_strong(expected, true);
+    if (!changed) {
+        return;
+    }
     unsigned int n_threads = std::thread::hardware_concurrency();
     if (n_threads > 64) {
         std::cerr << "NPUemulator: CPUs with " << n_threads << " threads are not supported.\n";
@@ -47,7 +53,7 @@ void npuemulator::Threads::_RunThreads(unsigned int n_cpus_per_core)
 {
     DWORD_PTR mask = 0;
     for (unsigned int i = 0; i < n_cpus_per_core; ++i) {
-        mask &= 1 << i;
+        mask &= static_cast<DWORD_PTR>(1) << i;
     }
     SetThreadAffinityMask(GetCurrentThread(), mask);
     for (auto &th : _additional_threads) {

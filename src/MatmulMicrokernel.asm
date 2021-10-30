@@ -20,12 +20,18 @@ StoreRow:
     pshufb  xmm1,   xmm9
     cmp edx,    32
     jb  l1
+    movdqu  xmm2,   xmmword ptr [rcx]
+    paddb   xmm0,   xmm2
     vmovdqu xmmword ptr [rcx],  xmm0
+    movdqu  xmm3,   xmmword ptr [rcx]
+    paddb   xmm0,   xmm3
     vmovdqu xmmword ptr [rcx + 16], xmm1
     jmp l6
 l1:
     cmp edx,    16
     jb  l2
+    movdqu  xmm2,   xmmword ptr [rcx]
+    paddb   xmm0,   xmm2
     vmovdqu xmmword ptr [rcx],  xmm0
     vmovdqa xmm0,   xmm1
     add rcx,    16
@@ -33,6 +39,8 @@ l1:
 l2:
     cmp edx,    8
     jb  l3
+    movq    xmm2,   qword ptr [rcx]
+    paddb   xmm0,   xmm2
     movq    qword ptr [rcx],    xmm0
     psrldq  xmm0,   8
     add rcx,    8
@@ -40,6 +48,8 @@ l2:
 l3:
     cmp edx,    4
     jb  l4
+    movd    xmm2,   dword ptr [rcx]
+    paddb   xmm0,   xmm2
     movd    dword ptr [rcx],    xmm0
     psrldq  xmm0,   4
     add rcx,    4
@@ -48,7 +58,8 @@ l4:
     cmp edx,    2
     jb  l5
     movd    eax,    xmm0
-    mov [rcx],  ax
+    add [rcx],  al
+    add [rcx + 1],  ah
     psrldq  xmm0,   2
     add rcx,    2
     sub edx,    2
@@ -56,7 +67,7 @@ l5:
     cmp edx, 1
     jb  l6
     movd    eax,    xmm0
-    mov [rcx],  al
+    add [rcx],  al
 l6:
     jmp store_row_return_label
 
@@ -87,7 +98,7 @@ Microkernel:
     xor rdx,    rdx
     xor r10d,   r10d
     xor r11d,   r11d
-    mov r12d,   dword ptr [rbp + 56]
+    mov r12d,   dword ptr [rbp + 64]
     cmp r12d,   1
     je  loop_head
     mov edx,    eax
@@ -97,6 +108,7 @@ Microkernel:
     cmp r12d,   3
     je  loop_head
     lea r11d,   [edx + r10d]
+    mov eax,    dword ptr [rbp + 80]
 ; BEGIN LOOP
 loop_head:
     vlddqu  ymm8,   ymmword ptr [r8]
@@ -126,7 +138,7 @@ loop_head:
     sub eax,    1
     jne loop_head
 ; END LOOP
-    mov r10,    qword ptr [rbp + 72]
+    mov r10,    qword ptr [rbp + 56]
     test    r10,    r10
     jz  no_bias
     vpmovsxbw   ymm8,   xmmword ptr [r10]
@@ -141,7 +153,7 @@ loop_head:
     vpaddw  ymm7,   ymm7,   ymm9
 no_bias:
     mov r10d,   dword ptr [rbp + 48]
-    mov r11d,   dword ptr [rbp + 64]
+    mov r11d,   dword ptr [rbp + 72]
     sub rsp,    32 * 6
     mov r8, rsp
     vmovdqu ymmword ptr [rsp],  ymm2
