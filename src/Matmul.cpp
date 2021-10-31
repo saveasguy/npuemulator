@@ -6,6 +6,8 @@
 
 #include "Threads.h"
 
+namespace {
+
 inline void ReorderVectors(const int8_t *src1, const int8_t *src2, int8_t *dst1, int8_t *dst2)
 {
     __m128i v1 = _mm_lddqu_si128(reinterpret_cast<const __m128i *>(src1));
@@ -55,26 +57,28 @@ inline void ComputeColumn(npuemulator::Matrix mat1, npuemulator::Matrix reordere
     }
 }
 
-void Macrokernel(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2, npuemulator::Matrix res,
-    npuemulator::Vector bias, int internal_iterations, int bias_offset)
+inline void Macrokernel(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2, npuemulator::Matrix res,
+    npuemulator::Vector bias, int internal_iterations)
 {
+    int bias_offset = bias.length ? 32 : 0;
     int i = res.width;
     for (; i >= 32; i -= 32) {
         ComputeColumn(mat1, reordered_mat2, res, bias, 32, internal_iterations);
         reordered_mat2.data += 64 * mat1.width;
         res.data += 32;
         bias.data += bias_offset;
-        bias.length -= bias_offset;
     }
     if (i) {
         int8_t b[32];
-        if (bias.data) {
+        if (bias.length) {
             memset(b, 0, 32);
-            memcpy(b, bias.data, bias.length);
+            memcpy(b, bias.data, i);
             bias.data = b;
         }
         ComputeColumn(mat1, reordered_mat2, res, bias, i, internal_iterations);
     }
+}
+
 }
 
 void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
@@ -89,23 +93,22 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
         exit(1);
     }
     ReorderMat2(mat2, mat2_buffer);
-    int bias_offset = bias.length ? 32 : 0;
     if (bias.length != 0 && mat2.width != bias.length) {
         std::cerr << "npuemulator: Matmul: wrong bias length!" << std::endl;
         exit(1);
     }
     const int l1_size = 32 * 1024;
-    int step = min(l1_size / 64, mat1.width);
+    int step = l1_size / 64 > mat1.width ? l1_size / 64 : mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
-    //for (; i >= step; i -= step)
+    for (; i >= step; i -= step)
     {
-        Macrokernel(mat1, mat2_buffer, res, bias, mat1.width, bias_offset);
+        Macrokernel(mat1, mat2_buffer, res, bias, step);
         mat1.data += step;
         mat2_buffer.data += 64 * step;
     }
     if (i) {
-        //Macrokernel(mat1, mat2_buffer, res, bias, i, bias_offset);
+        Macrokernel(mat1, mat2_buffer, res, bias, i);
     }
 }
 

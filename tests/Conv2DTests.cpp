@@ -77,6 +77,7 @@ void GetParamsAndCreateTestFile(int8_t *tensor, int8_t *filter, int height, int 
         s->close();
     };
     std::unique_ptr<std::ofstream> test_file(new std::ofstream("tests/test_file.txt"));
+    test_file->clear();
     ASSERT_TRUE((bool)*test_file);
     *test_file << height << ' ' << width << ' ' << channels << '\n';
     *test_file << filter_height << ' ' << filter_width << ' ' << filter_channels << '\n';

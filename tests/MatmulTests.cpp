@@ -34,7 +34,7 @@ void TestMatmul(int mat1_height, int mat1_width, int mat2_width, bool use_bias =
         bias.length = mat2_width;
         PutValues(bias.data, bias.length);
     }
-    npuemulator::ParallelMatmul(mat1, mat2, res, mat2_buf, bias);
+    npuemulator::Matmul(mat1, mat2, res, mat2_buf, bias);
     for (int i = 0; i < mat1_height; ++i) {
         for (int j = 0; j < mat2_width; ++j) {
             int8_t val = 0;

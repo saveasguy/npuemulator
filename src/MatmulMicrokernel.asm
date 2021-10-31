@@ -173,8 +173,8 @@ store_row_return_label:
     add r9, r10
     sub r12d,   1
     jne store_loop_head
-epilogue:
     add rsp,    32 * 6
+epilogue:
     movdqu  xmm6,   xmmword ptr [rsp]
     movdqu  xmm7,   xmmword ptr [rsp + 16]
     movdqu  xmm8,   xmmword ptr [rsp + 2 * 16]
