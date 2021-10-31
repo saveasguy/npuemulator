@@ -4,6 +4,7 @@
 
 #include <immintrin.h>
 
+#include "Memory.h"
 #include "Threads.h"
 
 namespace {
@@ -97,8 +98,8 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
         std::cerr << "npuemulator: Matmul: wrong bias length!" << std::endl;
         exit(1);
     }
-    const int l1_size = 32 * 1024;
-    int step = l1_size / 64 > mat1.width ? l1_size / 64 : mat1.width;
+    int L1_SIZE = npuemulator::L1CacheSize();
+    int step = L1_SIZE / 64 > mat1.width ? L1_SIZE / 64 : mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
     for (; i >= step; i -= step)

@@ -24,17 +24,17 @@ void TestDense(int height, int width)
     delete[] d;
 }
 
-TEST(Dense, Dense_1024x1024)
+TEST(DENSE, Dense_1024x1024)
 {
     TestDense(1024, 1024);
 }
 
-TEST(FC, FC_1001x1024)
+TEST(DENSE, Dense_1001x1024)
 {
     TestDense(1001, 1024);
 }
 
-TEST(FC, FC_1001x1001)
+TEST(DENSE, Dense_1001x1001)
 {
     TestDense(1001, 1001);
 }
