@@ -21,8 +21,8 @@ static void BM_Conv2D(benchmark::State &state)
     npuemulator::Tensor res(rest, RES_HEIGHT, RES_WIDTH, FILTER_CHANNELS);
     auto src_matrix = new int8_t[RES_HEIGHT * RES_WIDTH * FILTER_SIZE * FILTER_SIZE * CHANNELS];
     npuemulator::Matrix src_mat(src_matrix, RES_HEIGHT * RES_WIDTH, FILTER_SIZE * FILTER_SIZE * CHANNELS);
-    auto filter_buffer = new int8_t[2 * NPUEMUL_THREADS.Count() * FILTER_SIZE * FILTER_SIZE * CHANNELS * FILTER_CHANNELS];
-    npuemulator::Matrix filter_buf(filter_buffer, NPUEMUL_THREADS.Count() * FILTER_SIZE * FILTER_SIZE * CHANNELS, 2 * FILTER_CHANNELS);
+    auto filter_buffer = new int8_t[2 * npuemulator::CountThreads() * FILTER_SIZE * FILTER_SIZE * CHANNELS * FILTER_CHANNELS];
+    npuemulator::Matrix filter_buf(filter_buffer, npuemulator::CountThreads() * FILTER_SIZE * FILTER_SIZE * CHANNELS, 2 * FILTER_CHANNELS);
     for (auto _ : state)
     {
         npuemulator::Conv2D(src, filter, {1, 1}, {1, 1, 1, 1}, {1, 1}, res, src_mat, filter_buf);

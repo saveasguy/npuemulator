@@ -1,6 +1,7 @@
 #include "Matmul.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include <immintrin.h>
 
@@ -134,7 +135,7 @@ void MatmulWrapper(int8_t *args)
 
 void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
-    int n_threads = NPUEMUL_THREADS.Count();
+    int n_threads = CountThreads();
     if (mat1.height < n_threads) {
         Matmul(mat1, mat2, res, mat2_buffer);
         return;
@@ -152,11 +153,13 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
         mat2_buffer.data += mat2_buffer_height * mat2_buffer.width;
         mat2_buffer.height -= mat2_buffer_height;
         mat1_height -= mat1.height;
-        NPUEMUL_THREADS.RunTask(MatmulWrapper, args[i]);
+        RunTask(MatmulWrapper, args[i]);
     }
     mat1.height = mat1_height;
     res.height = mat1_height;
     Matmul(mat1, mat2, res, mat2_buffer, bias);
-    NPUEMUL_THREADS.WaitThreads();
+    WaitTasks();
     delete[] args;
 }
+
+#undef PUSH_MATMUL_ARGS

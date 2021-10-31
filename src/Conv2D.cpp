@@ -1,7 +1,8 @@
 #include "Conv2D.h"
 
+#include <iostream>
+
 #include "Matmul.h"
-#include "Threads.h"
 
 void TensorToMatrix(npuemulator::Tensor src, npuemulator::Dilation dilation, npuemulator::Padding pad, npuemulator::Stride stride,
     int8_t *matrix, int filter_height, int filter_width, int res_height, int res_width)

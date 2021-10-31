@@ -24,8 +24,8 @@ void TestMatmul(int mat1_height, int mat1_width, int mat2_width, bool use_bias =
     PutValues(ptr_mat2, mat1_width * mat2_width);
     npuemulator::Matrix mat2(ptr_mat2, mat1_width, mat2_width);
     int width_multiply32 = (mat2_width + 31) & -32;
-    int8_t *reordered = new int8_t[2 * NPUEMUL_THREADS.Count() * mat1_width * width_multiply32];
-    npuemulator::Matrix mat2_buf(reordered, NPUEMUL_THREADS.Count() * mat1_width, 2 *  width_multiply32);
+    int8_t *reordered = new int8_t[2 * npuemulator::CountThreads() * mat1_width * width_multiply32];
+    npuemulator::Matrix mat2_buf(reordered, npuemulator::CountThreads() * mat1_width, 2 *  width_multiply32);
     int8_t *ptr_res = new int8_t[mat1_height * mat2_width];
     npuemulator::Matrix res(ptr_res, mat1_height, mat2_width);
     npuemulator::Vector bias(nullptr, 0);

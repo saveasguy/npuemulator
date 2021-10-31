@@ -126,8 +126,8 @@ void TestConv2D(int height, int width, int channels, int filter_height, int filt
     npuemulator::Matrix src_mat(tensor_matrix, res_height * res_width, filter_height * filter_width * channels);
     int reord_height = (filter_height * filter_width * channels + 1) & -2;
     int reord_width = (filter_channels + 31) & -32;
-    auto filter_reordered_mat = new int8_t[2 * NPUEMUL_THREADS.Count() * reord_height * reord_width];
-    npuemulator::Matrix reord(filter_reordered_mat, NPUEMUL_THREADS.Count() * reord_height, 2 * reord_width);
+    auto filter_reordered_mat = new int8_t[2 * npuemulator::CountThreads() * reord_height * reord_width];
+    npuemulator::Matrix reord(filter_reordered_mat, npuemulator::CountThreads() * reord_height, 2 * reord_width);
     npuemulator::Conv2D(src, fil, {dilation_y, dilation_y}, {pad_top, pad_bot, pad_left, pad_right}, {stride_y, stride_x}, r, src_mat, reord);
     std::system("python -q tests/Conv2DTest.py");
     CheckResults(res, res_height * res_width * filter_channels);
