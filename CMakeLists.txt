@@ -12,7 +12,7 @@ endif()
 
 include_directories(include)
 add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/Dense.cpp
-    src/Threads.cpp src/Types.cpp src/Memory.cpp)
+    src/Threads.cpp src/Types.cpp src/Memory.cpp src/Errors.cpp)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 

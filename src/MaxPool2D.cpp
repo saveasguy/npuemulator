@@ -36,6 +36,7 @@ inline void Max(const int8_t *src, int8_t *dst, int length)
 
 void npuemulator::MaxPool2D(Tensor src, int filter_height, int filter_width, Stride stride, Padding pad, Tensor res)
 {
+    // TODO: ERROR IF WRONG SIDES
     int dilation_y_add_offset = src.width * src.channels;
     int dilation_x_add_offset = src.channels;
     int stride_y_add_offset = stride.y * src.width * src.channels;

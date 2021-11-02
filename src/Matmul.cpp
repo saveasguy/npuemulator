@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 #include <immintrin.h>
 
+#include "Errors.h"
 #include "Memory.h"
 #include "Threads.h"
 
@@ -85,22 +88,22 @@ inline void Macrokernel(npuemulator::Matrix mat1, npuemulator::Matrix reordered_
 
 void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffer, Vector bias)
 {
-    if (mat1.width != mat2.height || res.width != mat2.width || mat1.height != res.height) {
-        std::cerr << "npuemulator: Matmul: wrong sides!" << std::endl;
-        exit(1);
+    EqualOrDie("Matmul", "mat1 width", mat1.width, "mat2 height", mat2.height);
+    EqualOrDie("Matmul", "mat1 height", mat1.height, "res height", res.height);
+    EqualOrDie("Matmul", "mat2 width", mat2.width, "res width", res.width);
+    if (bias.length != 0) {
+        EqualOrDie("Matmul", "bias length", bias.length, "res width", res.width);
     }
+    GreaterZeroOrDie("Matmul", "mat1 height", mat1.height);
+    GreaterZeroOrDie("Matmul", "mat1 width", mat1.width);
+    GreaterZeroOrDie("Matmul", "mat2 width", mat2.width);
+    int buffer_size = mat2_buffer.height * mat2_buffer.width;
     int mat2_width_multiply32 = (mat2.width + 31) & -32;
-    if (mat2_buffer.height < mat2.height || mat2_buffer.width < 2 * mat2_width_multiply32) {
-        std::cerr << "npuemulator: Matmul: Not enough space for mat2_buffer!" << std::endl;
-        exit(1);
-    }
+    int expected_buffer_size = 2 * mat2.height * mat2_width_multiply32;
+    GreaterOrEqualOrDie("Matmul", "buffer actual size", buffer_size, "buffer expected size", expected_buffer_size);
     ReorderMat2(mat2, mat2_buffer);
-    if (bias.length != 0 && mat2.width != bias.length) {
-        std::cerr << "npuemulator: Matmul: wrong bias length!" << std::endl;
-        exit(1);
-    }
-    int L1_SIZE = npuemulator::L1CacheSize();
-    int step = L1_SIZE / 64 > mat1.width ? L1_SIZE / 64 : mat1.width;
+    int l1_size = npuemulator::L1CacheSize();
+    int step = l1_size / 64 > mat1.width ? l1_size / 64 : mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
     for (; i >= step; i -= step)
@@ -114,6 +117,8 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
     }
 }
 
+namespace {
+
 void MatmulWrapper(int8_t *args)
 {
     constexpr size_t STRUCT_MAT_SIZE = sizeof(npuemulator::Matrix);
@@ -123,7 +128,14 @@ void MatmulWrapper(int8_t *args)
     auto res = *reinterpret_cast<npuemulator::Matrix *>(args + 2 * STRUCT_MAT_SIZE);
     auto mat2_buffer = *reinterpret_cast<npuemulator::Matrix *>(args + 3 * STRUCT_MAT_SIZE);
     auto bias = *reinterpret_cast<npuemulator::Vector *>(args + 4 * STRUCT_MAT_SIZE);
-    npuemulator::Matmul(mat1, mat2, res, mat2_buffer, bias);
+    try {
+        npuemulator::Matmul(mat1, mat2, res, mat2_buffer, bias);
+    }
+    catch (...) {
+        npuemulator::HandleThreadException(std::current_exception());
+    }
+}
+
 }
 
 #define PUSH_MATMUL_ARGS(ARGS, MAT1, MAT2, RES, MAT2_BUFFER, BIAS)\
@@ -140,6 +152,12 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
         Matmul(mat1, mat2, res, mat2_buffer);
         return;
     }
+    int buffer_size = mat2_buffer.height * mat2_buffer.width;
+    int mat2_width_multiply32 = (mat2.width + 31) & -32;
+    int expected_buffer_size = 2 * n_threads * mat2.height * mat2_width_multiply32;
+    GreaterOrEqualOrDie("Parallel Matmul", "buffer actual size", buffer_size, "buffer expected size", expected_buffer_size);
+    mat2_buffer.height = n_threads * mat2.height;
+    mat2_buffer.width = 2 * mat2_width_multiply32;
     int mat2_buffer_height = mat2_buffer.height / n_threads;
     int mat1_height = mat1.height;
     res.height = mat1.height /= n_threads;

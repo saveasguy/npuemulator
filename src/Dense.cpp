@@ -5,6 +5,7 @@
 
 #include <immintrin.h>
 
+#include "Errors.h"
 #include "Threads.h"
 
 inline int8_t BuildResult(int16_t *vector, int8_t *other_weights, int8_t *other_src, int len) {
@@ -61,9 +62,10 @@ inline void ComputeValues(int8_t *weights, int width, int8_t *src, int8_t *dst, 
 
 void npuemulator::Dense(Matrix weights, Vector src, Vector dst, Vector bias)
 {
-    if (weights.width != src.length || weights.height != dst.length || bias.length != 0 && dst.length != bias.length) {
-        std::cerr << "npuemulator:: Dense: Wrong sides!" << std::endl;
-        exit(1);
+    EqualOrDie("Dense", "weight height", weights.height, "dst length", dst.length);
+    EqualOrDie("Dense", "weight width", weights.width, "src length", src.length);
+    if (bias.length != 0) {
+        EqualOrDie("Dense", "bias length", bias.length, "dst length", dst.length);
     }
     int i = weights.height;
     for (; i >= 4; i -= 4) {

@@ -42,11 +42,21 @@ public:
     void WaitTasks()
     {
         while ((int)_n_working_threads != 0);
+        if (_exception) {
+            std::cerr << "exc thrown";
+            std::rethrow_exception(_exception);
+        }
     }
 
     int Count()
     {
         return static_cast<int>(_additional_threads.size() + 1);
+    }
+
+    void HandleThreadException(std::exception_ptr exc)
+    {
+        std::lock_guard<std::mutex> lg(_exception_mutex);
+        _exception = exc;
     }
 
 private:
@@ -74,7 +84,9 @@ private:
         _processing = false;
         _condition.notify_all();
         for (auto &th : _additional_threads) {
-            th.join();
+            if (th.joinable()) {
+                th.join();
+            }
         }
     }
 
@@ -128,6 +140,9 @@ private:
     std::vector<std::thread> _additional_threads;
     std::queue<ThreadTask> _task_queue;
 
+    std::mutex _exception_mutex;
+    std::exception_ptr _exception;
+
     std::atomic_int _n_working_threads;
     std::condition_variable _condition;
     std::mutex _q_mutex;
@@ -150,4 +165,9 @@ void npuemulator::RunTask(void (*proc)(int8_t *), int8_t *args)
 void npuemulator::WaitTasks()
 {
     Threads::Instance().WaitTasks();
+}
+
+void npuemulator::HandleThreadException(std::exception_ptr exc)
+{
+    Threads::Instance().HandleThreadException(exc);
 }

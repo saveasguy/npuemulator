@@ -4,14 +4,12 @@
 
 #include <immintrin.h>
 
-#include <Threads.h>
+#include "Errors.h"
+#include "Threads.h"
 
 void npuemulator::ReLu(Vector src, Vector dst)
 {
-    if (src.length != dst.length) {
-        std::cerr << "npuemulator: ReLu: Wrong lengths!" << std::endl;
-        exit(1);
-    }
+    EqualOrDie("ReLu", "src length", src.length, "dst length", dst.length);
     __m256i zerov = _mm256_setzero_si256();
     int i = src.length;
     for (; i >= 64; i -= 64) {

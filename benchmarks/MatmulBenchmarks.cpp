@@ -51,4 +51,4 @@ static void BM_Matmul1024(benchmark::State &state)
     delete[] c;
     delete[] d;
 }
-//BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(10);
+BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(10);
