@@ -4,6 +4,8 @@
 
 #include <immintrin.h>
 
+#include "Errors.h"
+
 inline void Max(const int8_t *src, int8_t *dst, int length)
 {
     for (; length >= 64; length -= 64) {
@@ -37,6 +39,11 @@ inline void Max(const int8_t *src, int8_t *dst, int length)
 void npuemulator::MaxPool2D(Tensor src, int filter_height, int filter_width, Stride stride, Padding pad, Tensor res)
 {
     // TODO: ERROR IF WRONG SIDES
+    int expected_res_height = (src.height + pad.top + pad.bot - filter_height) / stride.y + 1;
+    int expected_res_width = (src.width + pad.left + pad.right - filter_width) / stride.x + 1;
+    EqualOrDie("MaxPool2D", "expected res height", expected_res_height, "res height", res.height);
+    EqualOrDie("MaxPool2D", "expected res width", expected_res_width, "res width", res.width);
+    EqualOrDie("MaxPool2D", "src channels", src.channels, "res channels", res.channels);
     int dilation_y_add_offset = src.width * src.channels;
     int dilation_x_add_offset = src.channels;
     int stride_y_add_offset = stride.y * src.width * src.channels;
