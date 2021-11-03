@@ -58,7 +58,7 @@ void vgg16()
     Conv2D({src, 56, 56, 256}, {filter7, 3, 3, 256, 256}, {1, 1}, {1, 1, 1, 1}, {1, 1}, {dst, 56, 56, 256},
         {src_buffer, SRC_BUFFFER_HEIGHT, SRC_BUFFER_WIDTH}, {filter_buffer, SRC_FILTER_HEIGHT, SRC_FILTER_WIDTH});
     ReLu({dst, 56 * 56 * 256}, {src, 56 * 56 * 256});
-    MaxPool2D({src, 112, 112, 256}, 2, 2, {2, 2}, {0, 0, 0, 0}, {dst, 28, 28, 256});
+    MaxPool2D({src, 56, 56, 256}, 2, 2, {2, 2}, {0, 0, 0, 0}, {dst, 28, 28, 256});
     Conv2D({dst, 28, 28, 256}, {filter8, 3, 3, 512, 256}, {1, 1}, {1, 1, 1, 1}, {1, 1}, {src, 28, 28, 512},
         {src_buffer, SRC_BUFFFER_HEIGHT, SRC_BUFFER_WIDTH}, {filter_buffer, SRC_FILTER_HEIGHT, SRC_FILTER_WIDTH});
     ReLu({src, 28 * 28 * 512}, {dst, 28 * 28 * 512});
@@ -93,4 +93,4 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-//BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
+BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
