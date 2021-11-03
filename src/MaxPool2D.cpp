@@ -38,7 +38,6 @@ inline void Max(const int8_t *src, int8_t *dst, int length)
 
 void npuemulator::MaxPool2D(Tensor src, int filter_height, int filter_width, Stride stride, Padding pad, Tensor res)
 {
-    // TODO: ERROR IF WRONG SIDES
     int expected_res_height = (src.height + pad.top + pad.bot - filter_height) / stride.y + 1;
     int expected_res_width = (src.width + pad.left + pad.right - filter_width) / stride.x + 1;
     EqualOrDie("MaxPool2D", "expected res height", expected_res_height, "res height", res.height);

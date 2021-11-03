@@ -68,6 +68,7 @@ inline void Macrokernel(npuemulator::Matrix mat1, npuemulator::Matrix reordered_
     int bias_offset = bias.length ? 32 : 0;
     int i = res.width;
     for (; i >= 32; i -= 32) {
+        _mm_prefetch(reinterpret_cast<const char *>(reordered_mat2.data), _MM_HINT_T0);
         ComputeColumn(mat1, reordered_mat2, res, bias, 32, internal_iterations);
         reordered_mat2.data += 64 * mat1.width;
         res.data += 32;

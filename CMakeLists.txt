@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.21)
 
 include(ExternalProject)
 
-set(ASM_SRC src/MatmulMicrokernel.obj)
+set(SRC_OS_SPEC_FOLDER win)
+if(UNIX)
+    set(SRC_OS_SPEC_FOLDER unix)
+endif()
+set(ASM_OBJ src/{SRC_OS_SPEC_FOLDER}/MatmulMicrokernel.obj)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-O3 -g -march=native)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -11,7 +15,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 include_directories(include)
-add_library(npuemul ${ASM_SRC} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/Dense.cpp
+add_library(npuemul ${ASM_OBJ} src/Matmul.cpp src/Conv2D.cpp src/ReLu.cpp src/MaxPool2D.cpp src/Dense.cpp
     src/Threads.cpp src/Types.cpp src/Memory.cpp src/Errors.cpp)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
