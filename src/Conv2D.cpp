@@ -1,5 +1,6 @@
 #include "Conv2D.h"
 
+#include <cstring>
 #include <iostream>
 
 #include "Errors.h"

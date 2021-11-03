@@ -9,8 +9,15 @@
 #include <thread>
 #include <vector>
 
+#ifdef _MSC_VER
 #include <intrin.h>
 #include <Windows.h>
+#elif defined(__unix__)
+#include <cpuid.h>
+#include <pthread.h>
+#else
+#error Platform is not supported!
+#endif
 
 namespace {
 
@@ -97,13 +104,20 @@ private:
     bool _HyperthreadingSupported()
     {
         int registers[4];
-        constexpr int cpu_features = 1;
-        __cpuid(registers, cpu_features);
+        constexpr int CPU_FEATURE = 1;
+#ifdef _MSC_VER
+        __cpuid(registers, CPU_FEATURE);
+#elif defined(__unix__)
+        __cpuid(CPU_FEATURE, registers[0], registers[1], registers[2], registers[3]);
+#else
+#error Platform is not supported!
+#endif
         return registers[3] >> 28 & 1;
     }
 
     void _RunThreads(unsigned int n_cpus_per_core)
     {
+#ifdef _MSC_VER
         DWORD_PTR mask = 0;
         for (unsigned int i = 0; i < n_cpus_per_core; ++i) {
             mask &= static_cast<DWORD_PTR>(1) << i;
@@ -114,6 +128,21 @@ private:
             mask <<= n_cpus_per_core;
             SetThreadAffinityMask((HANDLE)th.native_handle(), mask);
         }
+#elif defined(__unix__)
+        int physical_cpu = 0;
+        cpu_set_t mask;
+        for (auto &th : _additional_threads) {
+            CPU_ZERO(&mask);
+            for (int i = 0; i < n_cpus_per_core; ++i) {
+                CPU_SET(physical_cpu + i, &mask);
+            }
+            th = std::thread(&Threads::_ThreadWork, this);
+            pthread_setaffinity_np(th.native_handle(), sizeof(mask), &mask);
+            physical_cpu += n_cpus_per_core;
+        }
+#else
+#error Platform is not supported!
+#endif
     }
 
     void _ThreadWork()

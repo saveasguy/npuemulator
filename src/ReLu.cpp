@@ -1,5 +1,6 @@
 #include "ReLu.h"
 
+#include <cstring>
 #include <iostream>
 
 #include <immintrin.h>

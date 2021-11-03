@@ -2,18 +2,31 @@
 
 #include <atomic>
 
+#ifdef _MSC_VER
 #include <intrin.h>
+#elif defined(__unix__)
+#include <cpuid.h>
+#else
+#error Platform is not supported!
+#endif
 
 namespace {
 
 int GetL1CacheSize()
 {
-    int info[4];
-    __cpuid(info, 4);
-    int ways = info[1] >> 22 & 0x3FF;
-    int line_partitions = info[1] >> 12 & 0x3FF;
-    int line_size = info[1] & 0xFFF;
-    int n_sets = info[2];
+    constexpr int CPU_FEATURE = 4;
+    int registers[4];
+#ifdef _MSC_VER
+    __cpuid(registers, CPU_FEATURE);
+#elif defined(__unix__)
+    __cpuid(CPU_FEATURE, registers[0], registers[1], registers[2], registers[3]);
+#else
+#error Platform is not supported!
+#endif
+    int ways = registers[1] >> 22 & 0x3FF;
+    int line_partitions = registers[1] >> 12 & 0x3FF;
+    int line_size = registers[1] & 0xFFF;
+    int n_sets = registers[2];
     return (ways + 1) * (line_partitions + 1) * (line_size + 1) * (n_sets + 1);
 }
 

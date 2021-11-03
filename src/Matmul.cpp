@@ -1,6 +1,7 @@
 #include "Matmul.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -163,7 +164,7 @@ void npuemulator::ParallelMatmul(Matrix mat1, Matrix mat2, Matrix res, Matrix ma
     int mat1_height = mat1.height;
     res.height = mat1.height /= n_threads;
     constexpr size_t ARGS_SIZE = 4 * sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector);
-    auto (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
+    int8_t (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
     int i = 0;
     for (; i < n_threads - 1; ++i) {
         PUSH_MATMUL_ARGS(args[i], mat1, mat2, res, mat2_buffer, bias);

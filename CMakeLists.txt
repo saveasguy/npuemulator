@@ -1,10 +1,12 @@
 project(npuemul C CXX)
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.0)
 
 include(ExternalProject)
 
 set(SRC_OS_SPEC_FOLDER win)
+set(OS_SPEC_LIBS shlwapi)
 if(UNIX)
+    set(OS_SPEC_LIBS "pthread")
     set(SRC_OS_SPEC_FOLDER unix)
 endif()
 set(ASM_OBJ src/${SRC_OS_SPEC_FOLDER}/MatmulMicrokernel.obj)
@@ -33,10 +35,10 @@ ExternalProject_Add(googletest
 include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
 link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
 
-add_executable(tests tests/TestsMain.cpp tests/MatmulTests.cpp tests/ReLuTests.cpp tests/DenseTests.cpp tests/Conv2DTests.cpp)
+add_executable(tests tests/OSTests.cpp tests/TestsMain.cpp tests/MatmulTests.cpp tests/ReLuTests.cpp tests/DenseTests.cpp tests/Conv2DTests.cpp)
 add_dependencies(tests googletest)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_link_libraries(tests npuemul gtest_main gtest)
+    target_link_libraries(tests npuemul gtest_main gtest ${OS_SPEC_LIBS})
 else()
     target_link_libraries(tests npuemul gtest_maind gtestd)
 endif()
@@ -45,4 +47,4 @@ add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBench
     benchmarks/ReLuBenchmarks.cpp benchmarks/MaxPool2DBenchmarks.cpp benchmarks/DenseBenchmarks.cpp
     benchmarks/VGG16Benchmarks.cpp)
 add_dependencies(benchmarks googlebenchmark)
-target_link_libraries(benchmarks npuemul benchmark_main benchmark shlwapi)
+target_link_libraries(benchmarks npuemul benchmark_main benchmark ${OS_SPEC_LIBS})
