@@ -4,7 +4,7 @@
 #include <Threads.h>
 #include <Types.h>
 
-static void BM_ReLu(benchmark::State &state)
+static void BM_ReLu_224x224x64(benchmark::State &state)
 {
     constexpr int SIZE = 64 * 224 * 224;
     auto v1 = new int8_t[SIZE];
@@ -18,4 +18,4 @@ static void BM_ReLu(benchmark::State &state)
     delete[] v1;
     delete[] v2;
 }
-//BENCHMARK(BM_ReLu)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);
+BENCHMARK(BM_ReLu_224x224x64)->Iterations(100)->Unit(benchmark::TimeUnit::kMillisecond);

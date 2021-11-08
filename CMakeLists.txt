@@ -1,7 +1,9 @@
 project(npuemul C CXX)
 cmake_minimum_required(VERSION 3.0)
 
+enable_testing()
 include(ExternalProject)
+include(GoogleTest)
 
 set(SRC_OS_SPEC_FOLDER win)
 set(OS_SPEC_LIBS shlwapi)
@@ -48,3 +50,4 @@ add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBench
     benchmarks/VGG16Benchmarks.cpp)
 add_dependencies(benchmarks googlebenchmark)
 target_link_libraries(benchmarks npuemul benchmark_main benchmark ${OS_SPEC_LIBS})
+gtest_discover_tests(tests)

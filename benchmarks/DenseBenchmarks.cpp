@@ -2,9 +2,9 @@
 
 #include <Dense.h>
 
-static void BM_Dense(benchmark::State &state)
+static void BM_Dense_1000x1000(benchmark::State &state)
 {
-    constexpr int SIZE1 = 4096;
+    constexpr int SIZE1 = 1000;
     constexpr int SIZE2 = 1000;
     auto w = new int8_t[SIZE1 * SIZE2];
     npuemulator::Matrix weights(w, SIZE2, SIZE1);
@@ -19,4 +19,4 @@ static void BM_Dense(benchmark::State &state)
     delete[] s;
     delete[] d;
 }
-//BENCHMARK(BM_Dense)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(800);
+BENCHMARK(BM_Dense_1000x1000)->Iterations(800)->Unit(benchmark::TimeUnit::kMillisecond);
