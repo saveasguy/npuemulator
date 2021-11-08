@@ -35,7 +35,7 @@ inline void Max(const int8_t *src, int8_t *dst, int length)
         memcpy(dst, data, length);
     }
 }
-
+#include <iostream>
 void npuemulator::MaxPool2D(Tensor src, int filter_height, int filter_width, Stride stride, Padding pad, Tensor res)
 {
     int expected_res_height = (src.height + pad.top + pad.bot - filter_height) / stride.y + 1;
