@@ -93,4 +93,31 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
+//BENCHMARK(BM_VGG16)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(2);
+
+#include <immintrin.h>
+
+void cpu_saxpy(int n, float a, const float *x, float *y)
+{
+    __m256 av = _mm256_set1_ps(a);
+    for (; n; n -= 8) {
+        __m256 yv = _mm256_loadu_ps(y);
+        __m256 xv = _mm256_loadu_ps(x);
+        yv = _mm256_fmadd_ps(av, xv, yv);
+        _mm256_storeu_ps(y, yv);
+    }
+}
+
+
+static void BM_fd(benchmark::State &state)
+{
+    const int N = 8000000;
+    float *x = new float[N];
+    float *y = new float[N];
+    for (auto _ : state) {
+        cpu_saxpy(N, 2.0, x, y);
+    }
+    delete[] x;
+    delete[] y;
+}
+BENCHMARK(BM_fd)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond);

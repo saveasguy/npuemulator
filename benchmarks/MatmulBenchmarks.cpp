@@ -29,7 +29,7 @@ static void BM_Matmul256(benchmark::State &state)
 }
 //BENCHMARK(BM_Matmul256)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(700);
 
-static void BM_Matmul1024(benchmark::State &state)
+static void BM_Matmul2048(benchmark::State &state)
 {
     constexpr size_t SIZE1 = 2048;
     constexpr size_t SIZE2 = 2048;
@@ -51,4 +51,4 @@ static void BM_Matmul1024(benchmark::State &state)
     delete[] c;
     delete[] d;
 }
-BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(10);
+//BENCHMARK(BM_Matmul1024)->Repetitions(10)->Unit(benchmark::TimeUnit::kMillisecond)->Iterations(10);

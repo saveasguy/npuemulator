@@ -71,11 +71,14 @@ private:
         _processing(true),
         _n_working_threads(0)
     {
-        unsigned int n_threads = std::thread::hardware_concurrency();
-        if (n_threads > 64) {
-            std::cerr << "NPUemulator: CPUs with " << n_threads << " threads are not supported.\n";
-            exit(1);
-        }
+        int n_threads = 0;
+#ifdef _MSC_VER
+        SYSTEM_INFO sys_info;
+        GetSystemInfo(&sys_info);
+        n_threads = sys_info.dwNumberOfProcessors;
+#else
+        n_threads = std::thread::hardware_concurrency();
+#endif
         unsigned int n_cores = n_threads;
         unsigned int n_threads_per_core = 1;
         if (_HyperthreadingSupported()) {
