@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <Dense.h>
+#include <Threads.h>
 #include <Types.h>
 
 void TestDense(int height, int width)
@@ -11,7 +12,9 @@ void TestDense(int height, int width)
     npuemulator::Vector src(s, width);
     auto d = new int8_t[height];
     npuemulator::Vector dst(d, height);
-    npuemulator::Dense(weights, src, dst);
+    auto b = new int8_t[npuemulator::CountThreads() * width];
+    npuemulator::Vector buf(d, npuemulator::CountThreads() * width);
+    npuemulator::ParallelDense(weights, src, dst, buf);
     for (int i = 0; i < height; ++i) {
         int8_t res = 0;
         for (int j = 0; j < width; ++j) {
