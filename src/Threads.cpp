@@ -49,9 +49,13 @@ public:
     void WaitTasks()
     {
         while ((int)_n_working_threads != 0);
-        if (_exception) {
-            std::cerr << "exc thrown";
-            std::rethrow_exception(_exception);
+        try {
+            if (_exception) {
+                std::rethrow_exception(_exception);
+            }
+        }
+        catch (const std::exception &exc) {
+            throw exc;
         }
     }
 
