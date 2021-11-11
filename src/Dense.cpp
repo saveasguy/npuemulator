@@ -1,5 +1,6 @@
 #include "Dense.h"
 
+#include <cstring>
 #include <iostream>
 #include <numeric>
 
