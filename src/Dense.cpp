@@ -125,7 +125,13 @@ void npuemulator::ParallelDense(Matrix weights, Vector src, Vector dst, Vector b
         weights_height -= weights.height;
         dst.data += dst.length;
         dst_length -= dst.length;
+        bias.data += bias.length;
+        bias_length -= bias.length;
     }
+    weights.height = weights_height;
+    dst.length = dst_length;
+    bias.length = bias_length;
+    Dense(weights, src, dst, bias);
     WaitTasks();
     delete[] args;
 }
