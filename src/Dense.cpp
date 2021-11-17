@@ -9,6 +9,8 @@
 #include "Errors.h"
 #include "Threads.h"
 
+namespace {
+
 inline int8_t BuildResult(int16_t *vector, int8_t *other_weights, int8_t *other_src, int len) {
     int8_t r = std::accumulate(vector, vector + 16, (int16_t)0);
     for (int i = 0; i < len; ++i) {
@@ -61,6 +63,8 @@ inline void ComputeValues(int8_t *weights, int width, int8_t *src, int8_t *dst, 
     }
 }
 
+}
+
 void npuemulator::Dense(Matrix weights, Vector src, Vector dst, Vector bias)
 {
     EqualOrDie("Dense", "weight height", weights.height, "dst length", dst.length);
@@ -81,61 +85,3 @@ void npuemulator::Dense(Matrix weights, Vector src, Vector dst, Vector bias)
         dst.data[j] += bias.data[j];
     }
 }
-/*
-void DenseWrapper(int8_t *args)
-{
-    npuemulator::Matrix weights = *reinterpret_cast<npuemulator::Matrix *>(args);
-    npuemulator::Vector src = *reinterpret_cast<npuemulator::Vector *>(args + sizeof(npuemulator::Matrix));
-    npuemulator::Vector dst = *reinterpret_cast<npuemulator::Vector *>(args + sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector));
-    npuemulator::Vector buffer = *reinterpret_cast<npuemulator::Vector *>(args + sizeof(npuemulator::Matrix) + 2 * sizeof(npuemulator::Vector));
-    npuemulator::Vector bias = *reinterpret_cast<npuemulator::Vector *>(args + sizeof(npuemulator::Matrix) + 3 * sizeof(npuemulator::Vector));
-    memcpy(buffer.data, src.data, src.length);
-    try {
-        npuemulator::Dense(weights, buffer, dst, bias);
-    }
-    catch (...) {
-        npuemulator::HandleThreadException(std::current_exception());
-    }
-}
-
-#define PUSH_DENSE_ARGS(ARGS, WEIGHTS, SRC, DST, BUFFER, BIAS)\
-    *reinterpret_cast<npuemulator::Matrix *>(ARGS) = WEIGHTS;\
-    *reinterpret_cast<npuemulator::Vector *>(ARGS + sizeof(npuemulator::Matrix)) = SRC;\
-    *reinterpret_cast<npuemulator::Vector *>(ARGS + sizeof(npuemulator::Matrix) + sizeof(npuemulator::Vector)) = DST;\
-    *reinterpret_cast<npuemulator::Vector *>(ARGS + sizeof(npuemulator::Matrix) + 2 * sizeof(npuemulator::Vector)) = BUFFER;\
-    *reinterpret_cast<npuemulator::Vector *>(ARGS + sizeof(npuemulator::Matrix) + 3 * sizeof(npuemulator::Vector)) = BIAS;
-
-void npuemulator::ParallelDense(Matrix weights, Vector src, Vector dst, Vector buffer, Vector bias)
-{
-    int n_threads = CountThreads();
-    GreaterOrEqualOrDie("Dense", "buffer length", buffer.length, "(n_threads - 1) x src length", (n_threads - 1) * src.length);
-    constexpr size_t ARGS_SIZE = sizeof(Matrix) + 4 * sizeof(Vector);
-    int8_t (*args)[ARGS_SIZE] = new int8_t[n_threads - 1][ARGS_SIZE];
-    buffer.length /= n_threads - 1;
-    int bias_length = bias.length;
-    bias.length /= n_threads;
-    int weights_height = weights.height;
-    weights.height /= n_threads;
-    int dst_length = dst.length;
-    dst.length /= n_threads;
-    for (int i = 0; i < n_threads - 1; ++i) {
-        PUSH_DENSE_ARGS(args[i], weights, src, dst, buffer, bias);
-        RunTask(DenseWrapper, args[i]);
-        buffer.data += buffer.length;
-        weights.data += weights.height * weights.width;
-        weights_height -= weights.height;
-        dst.data += dst.length;
-        dst_length -= dst.length;
-        bias.data += bias.length;
-        bias_length -= bias.length;
-    }
-    weights.height = weights_height;
-    dst.length = dst_length;
-    bias.length = bias_length;
-    Dense(weights, src, dst, bias);
-    WaitTasks();
-    delete[] args;
-}
-
-#undef PUSH_DENSE_ARGS
-*/

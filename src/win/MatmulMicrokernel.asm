@@ -98,14 +98,15 @@ Microkernel:
     xor r11d,   r11d
     mov r12d,   dword ptr [rbp + 64]
     cmp r12d,   1
-    je  loop_head
+    je  computations
     mov edx,    eax
     cmp r12d,   2
-    je  loop_head
+    je  computations
     lea r10d,   [2 * edx]
     cmp r12d,   3
-    je  loop_head
+    je  computations
     lea r11d,   [edx + r10d]
+computations:
     mov eax,    dword ptr [rbp + 80]
 ; BEGIN LOOP
 align 16

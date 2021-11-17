@@ -29,7 +29,6 @@ static int8_t *filter13 = new int8_t[3 * 3 * 512 * 512];
 static int8_t *weights1 = new int8_t[7 * 7 * 512 * 4096];
 static int8_t *weights2 = new int8_t[4096 * 4096];
 static int8_t *weights3 = new int8_t[4096 * 1000];
-static int8_t *dense_buffer = new int8_t[(npuemulator::CountThreads() - 1) * 7 * 7 * 512];
 
 using namespace npuemulator;
 void vgg16()
@@ -96,4 +95,4 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-BENCHMARK(BM_VGG16)->Iterations(2)->Unit(benchmark::TimeUnit::kMillisecond);
+BENCHMARK(BM_VGG16)->Iterations(2)->Unit(benchmark::TimeUnit::kMillisecond)->Repetitions(5);

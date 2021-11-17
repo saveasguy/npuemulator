@@ -135,10 +135,10 @@ TEST(MATMULB, Matmul3x4x5)
     TestMatmul(SIZE1, SIZE2, SIZE);
 }
 
-TEST(MATMULB, Matmul1027x1024x1026)
+TEST(MATMULB, Matmul1028x1024x1026)
 {
     constexpr int SIZE = 1026;
-    constexpr int SIZE1 = 1027;
+    constexpr int SIZE1 = 1028;
     constexpr int SIZE2 = 1024;
     TestMatmul(SIZE1, SIZE2, SIZE);
 }
