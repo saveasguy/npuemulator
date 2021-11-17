@@ -53,7 +53,7 @@ inline void ComputeColumn(npuemulator::Matrix mat1, npuemulator::Matrix reordere
     npuemulator::Matrix res, npuemulator::Vector bias, int kernel_width, int internal_iterations)
 {
     int i = mat1.height;
-    for (; i >= 4; i -=4) {
+    for (; i >= 4; i -= 4) {
         Microkernel(mat1.data, mat1.width, reordered_mat2.data, res.data, res.width, bias.data, 4, kernel_width, internal_iterations);
         mat1.data += 4 * mat1.width;
         res.data += 4 * res.width;
@@ -104,8 +104,9 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
     int expected_buffer_size = 2 * mat2.height * mat2_width_multiply32;
     GreaterOrEqualOrDie("Matmul", "buffer actual size", buffer_size, "buffer expected size", expected_buffer_size);
     ReorderMat2(mat2, mat2_buffer);
-    int l1_size = npuemulator::L1CacheSize();
-    int step = l1_size / 64 < mat1.width ? l1_size / 64 : mat1.width;
+    //int l1_size = L1CacheSize();
+    //int step = l1_size / 64 < mat1.width ? l1_size / 64 : mat1.width;
+    int step = mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
     for (; i >= step; i -= step)
@@ -115,6 +116,7 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
         mat2_buffer.data += 64 * step;
     }
     if (i) {
+        std::cout << i << std::endl;
         Macrokernel(mat1, mat2_buffer, res, bias, i);
     }
 }

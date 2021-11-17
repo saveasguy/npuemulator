@@ -20,11 +20,9 @@ StoreRow:
     pshufb  xmm1,   xmm9
     cmp edx,    32
     jb  l1
-    movdqu  xmm2,   xmmword ptr [rcx]
-    paddb   xmm0,   xmm2
+    vpaddb xmm0,   xmm0,   xmmword ptr [rcx]
     vmovdqu xmmword ptr [rcx],  xmm0
-    movdqu  xmm3,   xmmword ptr [rcx + 16]
-    paddb   xmm1,   xmm3
+    vpaddb xmm1,   xmm1,   xmmword ptr [rcx + 16]
     vmovdqu xmmword ptr [rcx + 16], xmm1
     jmp l6
 l1:

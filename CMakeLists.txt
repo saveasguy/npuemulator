@@ -43,7 +43,7 @@ add_dependencies(tests googletest)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_libraries(tests npuemul gtest_main gtest ${OS_SPEC_LIBS})
 else()
-    target_link_libraries(tests npuemul gtest_maind gtestd)
+    target_link_libraries(tests npuemul gtest_maind gtestd  ${OS_SPEC_LIBS})
 endif()
 
 add_executable(benchmarks benchmarks/MatmulBenchmarks.cpp benchmarks/Conv2DBenchmarks.cpp
