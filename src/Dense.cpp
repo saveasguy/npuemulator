@@ -81,7 +81,7 @@ void npuemulator::Dense(Matrix weights, Vector src, Vector dst, Vector bias)
         dst.data[j] += bias.data[j];
     }
 }
-
+/*
 void DenseWrapper(int8_t *args)
 {
     npuemulator::Matrix weights = *reinterpret_cast<npuemulator::Matrix *>(args);
@@ -138,3 +138,4 @@ void npuemulator::ParallelDense(Matrix weights, Vector src, Vector dst, Vector b
 }
 
 #undef PUSH_DENSE_ARGS
+*/

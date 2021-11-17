@@ -105,7 +105,7 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
     GreaterOrEqualOrDie("Matmul", "buffer actual size", buffer_size, "buffer expected size", expected_buffer_size);
     ReorderMat2(mat2, mat2_buffer);
     int l1_size = npuemulator::L1CacheSize();
-    int step = l1_size / 64 > mat1.width ? l1_size / 64 : mat1.width;
+    int step = l1_size / 64 < mat1.width ? l1_size / 64 : mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
     for (; i >= step; i -= step)

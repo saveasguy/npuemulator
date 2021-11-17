@@ -12,9 +12,9 @@ void TestDense(int height, int width)
     npuemulator::Vector src(s, width);
     auto d = new int8_t[height];
     npuemulator::Vector dst(d, height);
-    auto b = new int8_t[(npuemulator::CountThreads() - 1) * width];
-    npuemulator::Vector buf(b, (npuemulator::CountThreads() - 1) * width);
-    npuemulator::ParallelDense(weights, src, dst, buf);
+    //auto b = new int8_t[(npuemulator::CountThreads() - 1) * width];
+    //npuemulator::Vector buf(b, (npuemulator::CountThreads() - 1) * width);
+    npuemulator::Dense(weights, src, dst);
     for (int i = 0; i < height; ++i) {
         int8_t res = 0;
         for (int j = 0; j < width; ++j) {
@@ -25,7 +25,7 @@ void TestDense(int height, int width)
     delete[] w;
     delete[] s;
     delete[] d;
-    delete[] b;
+    //delete[] b;
 }
 
 TEST(DENSE, Dense_1024x1024)
