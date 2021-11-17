@@ -96,4 +96,4 @@ static void BM_VGG16(benchmark::State &state)
         vgg16();
     }
 }
-BENCHMARK(BM_VGG16)->Iterations(2)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_VGG16)->Iterations(2)->Unit(benchmark::TimeUnit::kMillisecond);

@@ -124,7 +124,6 @@ namespace {
 void MatmulWrapper(int8_t *args)
 {
     constexpr size_t STRUCT_MAT_SIZE = sizeof(npuemulator::Matrix);
-    constexpr size_t STRUCT_VEC_SIZE = sizeof(npuemulator::Vector);
     auto mat1 = *reinterpret_cast<npuemulator::Matrix *>(args);
     auto mat2 = *reinterpret_cast<npuemulator::Matrix *>(args + STRUCT_MAT_SIZE);
     auto res = *reinterpret_cast<npuemulator::Matrix *>(args + 2 * STRUCT_MAT_SIZE);

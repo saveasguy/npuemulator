@@ -23,8 +23,8 @@ StoreRow:
     movdqu  xmm2,   xmmword ptr [rcx]
     paddb   xmm0,   xmm2
     vmovdqu xmmword ptr [rcx],  xmm0
-    movdqu  xmm3,   xmmword ptr [rcx]
-    paddb   xmm0,   xmm3
+    movdqu  xmm3,   xmmword ptr [rcx + 16]
+    paddb   xmm1,   xmm3
     vmovdqu xmmword ptr [rcx + 16], xmm1
     jmp l6
 l1:
@@ -110,6 +110,7 @@ Microkernel:
     lea r11d,   [edx + r10d]
     mov eax,    dword ptr [rbp + 80]
 ; BEGIN LOOP
+align 16
 loop_head:
     vlddqu  ymm8,   ymmword ptr [r8]
     vlddqu  ymm9,   ymmword ptr [r8 + 32]

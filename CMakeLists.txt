@@ -15,7 +15,7 @@ set(ASM_OBJ src/${SRC_OS_SPEC_FOLDER}/MatmulMicrokernel.obj)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-O3 -g -march=native)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/arch:AVX2)
+    add_compile_options(/O2 /arch:AVX2)
 endif()
 
 include_directories(include)
@@ -31,6 +31,7 @@ ExternalProject_Add(googlebenchmark
 
 ExternalProject_Add(googletest
     GIT_REPOSITORY https://github.com/google/googletest
+    GIT_TAG main
     CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_GMOCK=OFF -Dgtest_force_shared_crt=ON -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION}
 )
 

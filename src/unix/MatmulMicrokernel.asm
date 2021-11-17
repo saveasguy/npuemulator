@@ -27,8 +27,8 @@ StoreRow:
     movdqu  xmm2,   [rdi]
     paddb   xmm0,   xmm2
     vmovdqu [rdi],  xmm0
-    movdqu  xmm3,   [rdi]
-    paddb   xmm0,   xmm3
+    movdqu  xmm3,   [rdi + 16]
+    paddb   xmm1,   xmm3
     vmovdqu [rdi + 16], xmm1
     jmp l6
 l1:
