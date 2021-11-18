@@ -1,6 +1,7 @@
 #include "Memory.h"
 
 #include <atomic>
+#include <iostream>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -19,7 +20,12 @@ int GetL1CacheSize()
 #ifdef _MSC_VER
     __cpuid(registers, CPU_FEATURE);
 #elif defined(__unix__)
-    __cpuid(CPU_FEATURE, registers[0], registers[1], registers[2], registers[3]);
+    asm volatile ("cpuid":
+            "=a"(registers[0]),
+            "=b"(registers[1]),
+            "=c"(registers[2]),
+            "=d"(registers[3]):
+            "0"(CPU_FEATURE), "2"(0));
 #else
 #error Platform is not supported!
 #endif

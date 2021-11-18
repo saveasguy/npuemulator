@@ -47,7 +47,7 @@ void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2)
 }
 
 extern "C" void Microkernel(const int8_t *mat1, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int8_t *bias, int kernel_height, int kernel_width, int internal_iterations);
+    int8_t *reloop_heads, int res_width, int8_t *bias, int kernel_height, int kernel_width, int internal_iterations);
 
 inline void ComputeColumn(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2,
     npuemulator::Matrix res, npuemulator::Vector bias, int kernel_width, int internal_iterations)

@@ -81,7 +81,7 @@ Microkernel:
     push    r10
     push    r11
     push    r12
-    sub rsp,    8 * 32 + 8
+    sub rsp,    10 * 16
     movdqu  [rsp],  xmm6
     movdqu  [rsp + 16], xmm7
     movdqu  [rsp + 2 * 16], xmm8
@@ -106,14 +106,15 @@ Microkernel:
     xor r11d,   r11d
     mov r12d,   dword [rbp + 16]
     cmp r12d,   1
-    je  loop_head
+    je  computations
     mov esi,    eax
     cmp r12d,   2
-    je  loop_head
+    je  computations
     lea r10d,   [2 * esi]
     cmp r12d,   3
-    je  loop_head
+    je  computations
     lea r11d,   [esi + r10d]
+computations:
     mov eax,    dword [rbp + 32]
 ; BEGIN LOOP
 loop_head:
@@ -191,7 +192,7 @@ epilogue:
     movdqu  xmm13,  [rsp + 7 * 16]
     movdqu  xmm14,  [rsp + 8 * 16]
     movdqu  xmm15,  [rsp + 9 * 16]
-    add rsp,    8 * 32 + 8
+    add rsp,    10 * 16
     pop r12
     pop r11
     pop r10
