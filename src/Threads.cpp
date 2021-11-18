@@ -72,8 +72,8 @@ public:
 
 private:
     Threads() :
-        _processing(true),
-        _n_working_threads(0)
+        _n_working_threads(0),
+        _processing(true)
     {
         int n_threads = 0;
 #ifdef _MSC_VER
