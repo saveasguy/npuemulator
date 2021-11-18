@@ -18,4 +18,4 @@ static void BM_ReLu_224x224x64(benchmark::State &state)
     delete[] v1;
     delete[] v2;
 }
-BENCHMARK(BM_ReLu_224x224x64)->Iterations(100)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_ReLu_224x224x64)->Iterations(100)->Unit(benchmark::TimeUnit::kMillisecond);

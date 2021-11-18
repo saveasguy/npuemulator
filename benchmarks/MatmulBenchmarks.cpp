@@ -27,4 +27,4 @@ static void BM_Matmul_256x256x256(benchmark::State &state)
     delete[] c;
     delete[] d;
 }
-BENCHMARK(BM_Matmul_256x256x256)->Iterations(200)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_Matmul_256x256x256)->Iterations(200)->Unit(benchmark::TimeUnit::kMillisecond);

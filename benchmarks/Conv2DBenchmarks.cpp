@@ -33,4 +33,4 @@ static void BM_Conv2D_14x14x512_3x3x512x512(benchmark::State &state)
     delete[] src_matrix;
     delete[] filter_buffer;
 }
-BENCHMARK(BM_Conv2D_14x14x512_3x3x512x512)->Iterations(10)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_Conv2D_14x14x512_3x3x512x512)->Iterations(10)->Unit(benchmark::TimeUnit::kMillisecond);

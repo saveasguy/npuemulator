@@ -47,13 +47,13 @@ void ReorderMat2(npuemulator::Matrix mat2, npuemulator::Matrix reordered_mat2)
 }
 
 extern "C" void Microkernel(const int8_t *mat1, int mat1_width, const int8_t *reordered_mat2,
-    int8_t *res, int res_width, int8_t *bias, int kernel_height, int kernel_width, int internal_iterations);
+    int8_t *reloop_heads, int res_width, int8_t *bias, int kernel_height, int kernel_width, int internal_iterations);
 
 inline void ComputeColumn(npuemulator::Matrix mat1, npuemulator::Matrix reordered_mat2,
     npuemulator::Matrix res, npuemulator::Vector bias, int kernel_width, int internal_iterations)
 {
     int i = mat1.height;
-    for (; i >= 4; i -=4) {
+    for (; i >= 4; i -= 4) {
         Microkernel(mat1.data, mat1.width, reordered_mat2.data, res.data, res.width, bias.data, 4, kernel_width, internal_iterations);
         mat1.data += 4 * mat1.width;
         res.data += 4 * res.width;
@@ -104,8 +104,8 @@ void npuemulator::Matmul(Matrix mat1, Matrix mat2, Matrix res, Matrix mat2_buffe
     int expected_buffer_size = 2 * mat2.height * mat2_width_multiply32;
     GreaterOrEqualOrDie("Matmul", "buffer actual size", buffer_size, "buffer expected size", expected_buffer_size);
     ReorderMat2(mat2, mat2_buffer);
-    int l1_size = npuemulator::L1CacheSize();
-    int step = l1_size / 64 > mat1.width ? l1_size / 64 : mat1.width;
+    int l1_size = L1CacheSize();
+    int step = l1_size / 128 < mat1.width ? l1_size / 128 : mat1.width;
     int i = mat1.width;
     memset(res.data, 0, res.height * res.width);
     for (; i >= step; i -= step)
@@ -124,7 +124,6 @@ namespace {
 void MatmulWrapper(int8_t *args)
 {
     constexpr size_t STRUCT_MAT_SIZE = sizeof(npuemulator::Matrix);
-    constexpr size_t STRUCT_VEC_SIZE = sizeof(npuemulator::Vector);
     auto mat1 = *reinterpret_cast<npuemulator::Matrix *>(args);
     auto mat2 = *reinterpret_cast<npuemulator::Matrix *>(args + STRUCT_MAT_SIZE);
     auto res = *reinterpret_cast<npuemulator::Matrix *>(args + 2 * STRUCT_MAT_SIZE);

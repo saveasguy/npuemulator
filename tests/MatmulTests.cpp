@@ -135,13 +135,22 @@ TEST(MATMULB, Matmul3x4x5)
     TestMatmul(SIZE1, SIZE2, SIZE);
 }
 
-TEST(MATMULB, Matmul1024x1025x1025)
+TEST(MATMULB, Matmul1028x1024x1026)
 {
-    constexpr int SIZE = 1024;
-    constexpr int SIZE1 = 1025;
-    constexpr int SIZE2 = 1025;
+    constexpr int SIZE = 1026;
+    constexpr int SIZE1 = 1028;
+    constexpr int SIZE2 = 1024;
     TestMatmul(SIZE1, SIZE2, SIZE);
 }
+
+TEST(MATMULB, Matmul3454x2000x1111)
+{
+    constexpr int SIZE1 = 3454;
+    constexpr int SIZE2 = 2000;
+    constexpr int SIZE3 = 1111;
+    TestMatmul(SIZE1, SIZE2, SIZE3);
+}
+
 
 TEST(MATMULB, Matmul256x256x256_with_bias)
 {

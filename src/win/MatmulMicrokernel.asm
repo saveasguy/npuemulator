@@ -20,11 +20,9 @@ StoreRow:
     pshufb  xmm1,   xmm9
     cmp edx,    32
     jb  l1
-    movdqu  xmm2,   xmmword ptr [rcx]
-    paddb   xmm0,   xmm2
+    vpaddb xmm0,   xmm0,   xmmword ptr [rcx]
     vmovdqu xmmword ptr [rcx],  xmm0
-    movdqu  xmm3,   xmmword ptr [rcx]
-    paddb   xmm0,   xmm3
+    vpaddb xmm1,   xmm1,   xmmword ptr [rcx + 16]
     vmovdqu xmmword ptr [rcx + 16], xmm1
     jmp l6
 l1:
@@ -100,16 +98,18 @@ Microkernel:
     xor r11d,   r11d
     mov r12d,   dword ptr [rbp + 64]
     cmp r12d,   1
-    je  loop_head
+    je  computations
     mov edx,    eax
     cmp r12d,   2
-    je  loop_head
+    je  computations
     lea r10d,   [2 * edx]
     cmp r12d,   3
-    je  loop_head
+    je  computations
     lea r11d,   [edx + r10d]
+computations:
     mov eax,    dword ptr [rbp + 80]
 ; BEGIN LOOP
+align 16
 loop_head:
     vlddqu  ymm8,   ymmword ptr [r8]
     vlddqu  ymm9,   ymmword ptr [r8 + 32]

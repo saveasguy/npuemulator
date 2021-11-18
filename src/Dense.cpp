@@ -1,5 +1,6 @@
 #include "Dense.h"
 
+#include <cstring>
 #include <iostream>
 #include <numeric>
 
@@ -7,6 +8,8 @@
 
 #include "Errors.h"
 #include "Threads.h"
+
+namespace {
 
 inline int8_t BuildResult(int16_t *vector, int8_t *other_weights, int8_t *other_src, int len) {
     int8_t r = std::accumulate(vector, vector + 16, (int16_t)0);
@@ -58,6 +61,8 @@ inline void ComputeValues(int8_t *weights, int width, int8_t *src, int8_t *dst, 
         _mm256_storeu_si256(reinterpret_cast<__m256i *>(res), a3);
         dst[3] = BuildResult(res, weights + 3 * width, src, j);
     }
+}
+
 }
 
 void npuemulator::Dense(Matrix weights, Vector src, Vector dst, Vector bias)

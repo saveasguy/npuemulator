@@ -19,4 +19,4 @@ static void BM_Dense_1000x1000(benchmark::State &state)
     delete[] s;
     delete[] d;
 }
-BENCHMARK(BM_Dense_1000x1000)->Iterations(800)->Unit(benchmark::TimeUnit::kMillisecond);
+//BENCHMARK(BM_Dense_1000x1000)->Iterations(100)->Unit(benchmark::TimeUnit::kMillisecond);
